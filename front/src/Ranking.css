@@ -1,0 +1,147 @@
+.rk-wrap {
+  min-height: 100vh;
+  background: #ece8e8;
+  display: grid;
+  place-items: start center;
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+.rk-card {
+  width: 30%;
+  max-width: 960px;
+  background: purple;
+  color: #fff;
+  border-radius: 16px;
+  padding: 18px;
+  box-shadow: 0 10px 30px rgba(0,0,0,.07);
+}
+
+.rk-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+.rk-title { margin: 0; }
+.rk-subtle { opacity: 0.85; font-size: 0.95rem; }
+
+/* tabela com header sticky e scroll */
+.rk-table-wrap {
+  background: #fff;
+  border-radius: 12px;
+  color: #222;
+  border: 1px solid #ececec;
+}
+.rk-table-wrap.scrollable {
+  max-height: 460px;    /* permite scroll */
+  overflow: auto;
+}
+
+.rk-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 0.96rem;
+}
+
+.rk-table thead th {
+  position: sticky;
+  top: 0;
+  background: #faf5ff;
+  z-index: 1;
+  text-align: left;
+  padding: 12px 10px;
+  border-bottom: 1px solid #eee;
+  font-weight: 700;
+}
+.rk-table tbody td {
+  padding: 10px;
+  border-bottom: 1px solid #f2f2f2;
+}
+
+/* posição (troféu/medalha) */
+.pos-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 72px;
+  padding: 8px 10px;
+  border-radius: 999px;
+  font-weight: 800;
+  border: 1px solid #eee;
+  background: #fff;
+  color: #222;
+}
+.pos-badge.gold {
+  background: linear-gradient(135deg, #fff3b0, #ffd166);
+  border-color: #ffd166;
+}
+.pos-badge.silver {
+  background: linear-gradient(135deg, #f0f0f0, #d1d5db);
+  border-color: #cfd4dc;
+}
+.pos-badge.bronze {
+  background: linear-gradient(135deg, #f1c9a9, #d08b5b);
+  border-color: #d08b5b;
+}
+
+/* usuário */
+.rk-user {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: #6a1b9a;
+  border: 2px solid #d8c0f5;
+  color: #fff;
+  display: inline-grid;
+  place-items: center;
+  font-weight: 700;
+}
+.rk-name {
+  font-weight: 700;
+}
+.medal-tag {
+  margin-left: 8px;
+  font-size: 0.8rem;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: #f8f1ff;
+  border: 1px solid #d8c0f5;
+  color: #4c1d95;
+}
+.medal-tag.gold {
+  background: #fff7cc;
+  border-color: #ffd166;
+  color: #8a6d00;
+}
+.medal-tag.silver {
+  background: #f3f4f6;
+  border-color: #cfd4dc;
+  color: #374151;
+}
+.medal-tag.bronze {
+  background: #f6e2d3;
+  border-color: #d08b5b;
+  color: #7a3e1a;
+}
+
+/* score */
+.rk-score {
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+/* rodapé */
+.rk-hint {
+  color: #efe9ff;
+  opacity: 0.9;
+  font-size: 0.92rem;
+  margin: 10px 4px 0 4px;
+}

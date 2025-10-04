@@ -1,0 +1,99 @@
+/* Container */
+.login-wrap {
+  min-height: 100vh;
+  background: #ece8e8;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+/* Card */
+.login-card {
+  width: 100%;
+  max-width: 420px;
+  background: purple;
+  color: #fff;
+  border-radius: 16px;
+  padding: 22px;
+  box-shadow: 0 10px 30px rgba(0,0,0,.07);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.login-title {
+  margin: 0 0 8px 0;
+}
+
+/* Inputs */
+.login-label {
+  font-size: 0.9rem;
+  opacity: 0.9;
+}
+
+.login-input {
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid #d8c0f5;
+  background: #fff;
+  color: #222;
+  outline: none;
+}
+
+/* Buttons */
+.btn {
+  background: #fff;
+  color: purple;
+  border: 1px solid purple;
+  font-weight: 600;
+  transition: box-shadow 0.2s, transform 0.15s;
+  box-shadow: 0 2px 8px rgba(128,0,128,0.08);
+  outline: none;
+  border-radius: 12px;
+  padding: 10px 14px;
+  cursor: pointer;
+}
+
+.btn:active {
+  transform: scale(0.96);
+  box-shadow: 0 1px 4px rgba(128,0,128,0.18);
+}
+
+.btn.primary {
+  margin-top: 8px;
+}
+
+.btn.outline {
+  background: transparent;
+  color: #fff;
+  border-color: #fff;
+}
+
+/* REST x gRPC toggle */
+.login-toggle {
+  display: inline-flex;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+.btn.active {
+  background: #f8f1ff;
+  border-color: #d8c0f5;
+}
+
+/* Messages */
+.msg {
+  margin: 6px 0 0;
+  font-size: 0.95rem;
+}
+.msg.ok { color: #d1fadf; }
+.msg.err { color: #fee2e2; }
+
+/* Links */
+.login-links {
+  margin-top: 8px;
+}
+.login-links a {
+  color: #fff;
+  text-decoration: underline;
+}
