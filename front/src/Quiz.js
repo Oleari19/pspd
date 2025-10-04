@@ -147,15 +147,6 @@ export default function Quiz() {
     setHints([]);
   }
 
-  function pedirDicas() {
-    pararHints();
-    setHints([]);
-    const url = `${base(prefix)}/quiz/${questao.id}/hints`;
-    stopRef.current = listenSSE(url, (item) => {
-      setHints((h) => [...h, item]);
-    });
-  }
-
   function pararHints() {
     if (stopRef.current) {
       stopRef.current();
@@ -230,9 +221,7 @@ export default function Quiz() {
             <button className="btn-reiniciar" onClick={Reiniciar}>
               Reiniciar
             </button>
-            <button className="btn" onClick={pedirDicas} type="button">
-              Pedir dicas (stream)
-            </button>
+
           </div>
         ) : (
           <div className="feedback">
@@ -251,23 +240,7 @@ export default function Quiz() {
         )}
       </section>
 
-      {hints.length > 0 && (
-        <section className="cartao" style={{ marginTop: 16 }}>
-          <header className="quiz-head">
-            <strong>Dicas (SSE)</strong>
-          </header>
-          <div
-            className="card-body stream"
-            style={{ background: "#fff", color: "#222", borderRadius: 12 }}
-          >
-            {hints.map((h, i) => (
-              <pre key={i} className="logline">
-                {typeof h === "string" ? h : JSON.stringify(h, null, 2)}
-              </pre>
-            ))}
-          </div>
-        </section>
-      )}
+
     </main>
   );
 }

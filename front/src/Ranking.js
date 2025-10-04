@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import "./Ranking.css";
 
-/** DEMO: dados fictícios do TOP 10 */
+
 const DEMO_ROWS = [
   { user: "Maria", score: 980 },
   { user: "Gabriel", score: 960 },
@@ -15,7 +15,6 @@ const DEMO_ROWS = [
   { user: "Bianca", score: 800 },
 ];
 
-/** Ícones/estilo por posição */
 function positionDecor(pos) {
   if (pos === 1) return { icon: "🏆", cls: "gold" };
   if (pos === 2) return { icon: "🥈", cls: "silver" };
@@ -29,11 +28,13 @@ function PositionBadge({ pos }) {
 }
 
 export default function Ranking() {
-  const rows = useMemo(() => {
-    return [...DEMO_ROWS]
-      .sort((a, b) => (b.score ?? 0) - (a.score ?? 0))
-      .map((r, i) => ({ ...r, pos: i + 1 }));
-  }, []);
+  const rows = useMemo(
+    () =>
+      [...DEMO_ROWS]
+        .sort((a, b) => (b.score ?? 0) - (a.score ?? 0))
+        .map((r, i) => ({ ...r, pos: i + 1 })),
+    []
+  );
 
   return (
     <div className="rk-wrap">
@@ -44,23 +45,31 @@ export default function Ranking() {
 
         <div className="rk-table-wrap scrollable">
           <table className="rk-table compact">
+            
+            <colgroup>
+              <col className="col-pos" />
+              <col className="col-user" />
+              <col className="col-score" />
+            </colgroup>
+
             <thead>
               <tr>
-                <th style={{ width: 90 }}>Posição</th>
+                <th>Posição</th>
                 <th>Usuário</th>
-                <th style={{ width: 120, textAlign: "right" }}>Pontuação</th>
+                <th>Pontuação</th>
               </tr>
             </thead>
+
             <tbody>
               {rows.map((r) => (
                 <tr key={r.user}>
-                  <td>
+                  <td className="cell-pos">
                     <PositionBadge pos={r.pos} />
                   </td>
-                  <td className="rk-user">
+                  <td className="cell-user">
                     <span className="rk-name">{r.user}</span>
                   </td>
-                  <td style={{ textAlign: "right" }}>
+                  <td className="cell-score">
                     <span className="rk-score">{r.score}</span>
                   </td>
                 </tr>

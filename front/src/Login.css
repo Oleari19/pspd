@@ -1,58 +1,82 @@
 /* Container */
 .login-wrap {
-  min-height: 100vh;
-  background: #ece8e8;
-  display: grid;
-  place-items: center;
-  padding: 20px;
+  width: 100vw;
+  background: #fff;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 0;
   box-sizing: border-box;
+  overflow: hidden;
 }
 
 /* Card */
-.login-card {
+.cadastro-card {
   width: 100%;
   max-width: 420px;
-  background: purple;
+  background: #222;
   color: #fff;
   border-radius: 16px;
   padding: 22px;
-  box-shadow: 0 10px 30px rgba(0,0,0,.07);
+  box-shadow: 0 10px 30px rgba(0,0,0,.12);
   display: flex;
   flex-direction: column;
   gap: 10px;
+  margin-top: 40px;
+}
+
+.login-card {
+  width: 100%;
+  max-width: 420px;
+  background: #222;
+  color: #fff;
+  border-radius: 16px;
+  padding: 22px;
+  box-shadow: 0 10px 30px rgba(0,0,0,.12);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 70px;
 }
 
 .login-title {
   margin: 0 0 8px 0;
+  color: #fff;
 }
 
 /* Inputs */
 .login-label {
   font-size: 0.9rem;
+  color: #fff;
   opacity: 0.9;
 }
 
 .login-input {
   padding: 10px 12px;
   border-radius: 10px;
-  border: 1px solid #d8c0f5;
+  border: 2px solid #222;
   background: #fff;
   color: #222;
   outline: none;
 }
 
 /* Buttons */
-.btn {
+.btn-login{
   background: #fff;
-  color: purple;
-  border: 1px solid purple;
+  color: #222;
+  border: 2px solid #222;
   font-weight: 600;
-  transition: box-shadow 0.2s, transform 0.15s;
-  box-shadow: 0 2px 8px rgba(128,0,128,0.08);
+  transition: box-shadow 0.2s, transform 0.15s, background 0.2s, color 0.2s;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.12);
   outline: none;
   border-radius: 12px;
   padding: 10px 14px;
   cursor: pointer;
+  margin-top: 12px;
+}
+.btn:hover {
+  background: #fff;
+  color: #222;
 }
 
 .btn:active {
@@ -77,8 +101,8 @@
   margin-bottom: 6px;
 }
 .btn.active {
-  background: #f8f1ff;
-  border-color: #d8c0f5;
+  background: #222;
+  border-color: #222;
 }
 
 /* Messages */
@@ -92,8 +116,11 @@
 /* Links */
 .login-links {
   margin-top: 8px;
+  color: #fff;
 }
 .login-links a {
   color: #fff;
   text-decoration: underline;
 }
+
+
