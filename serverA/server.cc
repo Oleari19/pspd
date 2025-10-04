@@ -63,7 +63,7 @@ class QuizServiceImpl final : public Quiz::Service {
                 		q.id,
                 		q.texto,
         	        	q.indiceResposta,
-	                	q.explicação,
+	                	q.explicacao,
                 		a.alternativa
             		FROM
                 		quiz q
@@ -96,8 +96,8 @@ class QuizServiceImpl final : public Quiz::Service {
 				if (!row["indiceResposta"].is_null()) {
 					pergunta_atual->set_indice_resposta(row["indiceResposta"].as<int>());
 				}
-				if (!row["explicação"].is_null()) {
-					pergunta_atual->set_explicacao(row["explicação"].as<std::string>());
+				if (!row["explicacao"].is_null()) {
+					pergunta_atual->set_explicacao(row["explicacao"].as<std::string>());
 				}
 
 				id_quiz_anterior = id_quiz_atual; // Atualiza o ID de controle
@@ -135,7 +135,7 @@ class QuizServiceImpl final : public Quiz::Service {
 
 			// Passo 1: Inserir na tabela 'quiz' e obter o ID gerado usando 'RETURNING id'
 			std::ostringstream insert_quiz_query;
-			insert_quiz_query << "INSERT INTO quiz(texto, indiceResposta, explicação) VALUES ("
+			insert_quiz_query << "INSERT INTO quiz(texto, indiceResposta, explicacao) VALUES ("
 				<< txn.quote(p.texto()) << ", "
 				<< p.indice_resposta() << ", "
 				<< txn.quote(p.explicacao()) << ") RETURNING id;";
