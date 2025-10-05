@@ -1,10 +1,13 @@
 import { useEffect, useRef, useState } from "react";
 import "./Quiz.css";
+import { useCookies } from "react-cookie";
 
-const REST_API_BASE = "http://localhost:8089/api";
-const REST_QUIZ_ENDPOINT = `${REST_API_BASE}/pergunta`;
+const REST_PREFIX = "/rest";
 const GRPC_PREFIX = "/grpc";
-const GRPC_QUIZ_ENDPOINT = `${GRPC_PREFIX}/quiz`;
+
+function base(prefix) {
+  return prefix === "/rest" ? REST_PREFIX : GRPC_PREFIX;
+}
 
 async function jsonFetch(url, { method = "GET", body, token } = {}) {
   const headers = { "Content-Type": "application/json" };
@@ -39,26 +42,6 @@ function Alternativa({ rotulo, texto, selecionada, estado, desabilitada, aoClica
   );
 }
 
-function ModeToggle({ prefix, setPrefix }) {
-  return (
-    <div className="toggle">
-      <button
-        className={prefix === "/rest" ? "btn active" : "btn"}
-        onClick={() => setPrefix("/rest")}
-        type="button"
-      >
-        REST
-      </button>
-      <button
-        className={prefix === "/grpc" ? "btn active" : "btn"}
-        onClick={() => setPrefix("/grpc")}
-        type="button"
-      >
-        gRPC
-      </button>
-    </div>
-  );
-}
 
 export default function Quiz() {
   const [questoes, setQuestoes] = useState([]);
@@ -69,6 +52,8 @@ export default function Quiz() {
   const [respostas, setRespostas] = useState([]);
   const [mostrarResposta, setMostrarResposta] = useState(false);
   const [prefix, setPrefix] = useState("/grpc");
+  const [cookies] = useCookies(["token"]);
+  
 
   const token = typeof localStorage !== "undefined" ? localStorage.getItem("token") || "" : "";
   const stopRef = useRef(null);
@@ -78,26 +63,13 @@ export default function Quiz() {
     async function carregarQuestoes() {
       try {
         setLoading(true);
-        const quizEndpoint = prefix === "/rest" ? REST_QUIZ_ENDPOINT : GRPC_QUIZ_ENDPOINT;
-        const { data } = await jsonFetch(quizEndpoint, { token });
+        const { data } = await jsonFetch(`${base(prefix)}/quiz`, { token });
         const formatado = Array.isArray(data)
           ? data.map(q => ({
-              id: q.id ?? q.codigoPergunta ?? q.codigo_pergunta,
-              texto: q.text || q.texto || q.pergunta,
-              alternativas: (() => {
-                const opts =
-                  q.options ||
-                  q.alternativas ||
-                  [q.q1, q.q2, q.q3, q.q4].filter((opt) => opt !== undefined && opt !== null);
-                const preenchidas = Array.isArray(opts) ? [...opts] : [];
-                while (preenchidas.length < 4) preenchidas.push("");
-                return preenchidas.slice(0, 4);
-              })(),
-              indiceResposta:
-                q.correctIndex ??
-                q.indice_resposta ??
-                q.indiceResposta ??
-                0,
+              id: q.id,
+              texto: q.text || q.texto,
+              alternativas: q.options || q.alternativas,
+              indiceResposta: q.correctIndex ?? q.indice_resposta,
               explicacao: q.explanation || q.explicacao || "",
             }))
           : [];
@@ -119,7 +91,7 @@ export default function Quiz() {
       }
     }
     carregarQuestoes();
-  }, [prefix, token]);
+  }, [prefix]);
 
   const total = questoes.length;
   const questao = questoes[etapa];
@@ -127,10 +99,7 @@ export default function Quiz() {
   const pontuacao = respostas.filter((r) => r.correta).length;
 
   async function validarNoBackend(questionId, answerText) {
-    if (prefix === "/rest") {
-      return {};
-    }
-    const url = `${GRPC_QUIZ_ENDPOINT}/${questionId}/validate`;
+    const url = `${base(prefix)}/quiz/${questionId}/validate`;
     const { data } = await jsonFetch(url, {
       method: "POST",
       body: { answer: answerText },
@@ -147,6 +116,12 @@ export default function Quiz() {
       const result = await validarNoBackend(questao.id, questao.alternativas[selecionada]);
       if (typeof result?.correct === "boolean") correta = result.correct;
       if (result?.explanation) questao.explicacao = result.explanation;
+
+      await fetch(`/grpc/user/score`, { method: "POST", headers: 
+        { "Content-Type": "application/json" },
+         body: JSON.stringify({ scorenew: pontuacao + (correta ? 10 : 0),
+           remembertok: cookies.token }) });
+
     } catch {}
 
     setRespostas((prev) => [...prev, { idQuestao: questao.id, correta }]);
@@ -218,7 +193,6 @@ export default function Quiz() {
             <strong>Pergunta {etapa + 1}</strong> / {total}
           </div>
           <div className="progresso-quiz">{progresso}% concluído</div>
-          <ModeToggle prefix={prefix} setPrefix={setPrefix} />
         </header>
 
         <h2 className="questao-quiz">{questao.texto}</h2>
@@ -251,7 +225,7 @@ export default function Quiz() {
               disabled={selecionada === null}
               onClick={Confirmar}
             >
-              Confirmar ({prefix.replace("/", "").toUpperCase()})
+              Confirmar 
             </button>
             <button className="btn-reiniciar" onClick={Reiniciar}>
               Reiniciar

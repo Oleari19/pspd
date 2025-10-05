@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import "./Login.css";
+import "./Login.css"; 
+import { useCookies } from 'react-cookie';
 
-const REST_API_BASE = "http://localhost:8089/api";
-const REST_REGISTER_ENDPOINT = `${REST_API_BASE}/usuario`;
+
 
 async function jsonPost(url, body) {
   const res = await fetch(url, {
@@ -25,64 +25,53 @@ export default function Cadastro() {
   const [passReg2, setPassReg2] = useState("");
   const [ok, setOk] = useState("");
   const [err, setErr] = useState("");
+  const [token, setToken] = useState("");
+  const [cookies, setCookie, removeCookie] = useCookies(['nomeDoCookie']);
 
   const navigate = useNavigate();
 
-  async function doRegister(mode) {
-    setErr(""); setOk("");
-
-    if (!name || !emailReg || !passReg || !passReg2) {
-      setErr("Preencha todos os campos.");
-      return;
+  async function doRegister() {
+    if(passReg === passReg2){
+    fetch("http://localhost:6969/grpc/user", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({
+    nome: name,
+    login: emailReg,
+    senha: passReg,
+    score: 0
+  }),
+})
+  .then((res) => {
+    if (!res.ok) {
+      throw new Error(`HTTP ${res.status}`);
     }
-    if (passReg !== passReg2) {
-      setErr("As senhas não coincidem.");
-      return;
-    }
-
-    const isGrpc = mode === "grpc";
-    const registerUrl = isGrpc ? "/grpc/auth/register" : REST_REGISTER_ENDPOINT;
-
+    return res.text(); // ← mudei para .text() para testar o que o servidor devolve
+  })
+  .then((data) => {
+    console.log("Resposta do servidor:", data);
     try {
-      if (isGrpc) {
-        await jsonPost(registerUrl, {
-          name,
-          email: emailReg,
-          password: passReg,
-        });
-      } else {
-        await jsonPost(registerUrl, {
-          email: emailReg,
-          senha: passReg,
-          pontuacao: 0,
-        });
-      }
+      const json = JSON.parse(data);
+      console.log("JSON parseado:", json);
+      setToken(json.rememberTokenRes || "");
+      setOk("Usuário cadastrado com sucesso!");
+      setErr("");
+      setCookie('token', json.rememberTokenRes, { path: '/' });
+      setTimeout(() => navigate("/quiz", { replace: true }), 1000);
+    } catch {
+      console.error("Resposta não é JSON válido.");
+    }
+  })
+  .catch((err) => console.error("Erro:", err));
 
-      localStorage.setItem("apiMode", mode);
-      localStorage.setItem("basePrefix", isGrpc ? "/grpc" : REST_API_BASE);
-      localStorage.setItem("demoUser", JSON.stringify({ name, email: emailReg }));
-
-      setOk(`Conta criada com sucesso via ${mode.toUpperCase()}!`);
-      setTimeout(() => navigate("/login", { replace: true }), 900);
-    } catch (e) {
-      if (isGrpc) {
-        localStorage.setItem("apiMode", mode);
-        localStorage.setItem("basePrefix", "/grpc");
-        localStorage.setItem("demoUser", JSON.stringify({ name, email: emailReg }));
-
-        setOk(`Conta criada (demo) via ${mode.toUpperCase()}.`);
-        setTimeout(() => navigate("/login", { replace: true }), 900);
-        return;
-      }
-
-      const message = e instanceof Error ? e.message : "Não foi possível criar a conta via REST.";
-      setErr(message || "Não foi possível criar a conta via REST.");
+    }else{
+      console.log("senha diferente");
     }
   }
 
   return (
     <div className="login-wrap">
-      <form className="cadastro-card" onSubmit={(e) => e.preventDefault()}>
+      <form className="cadastro-card" onSubmit={(e) => {e.preventDefault()}}>
         <h1 className="login-title">Criar uma conta</h1>
         <p className="texto-inicial">Preencha os dados para começar o Quiz.</p>
 
@@ -122,11 +111,8 @@ export default function Cadastro() {
 
         
         <div className="btn-row">
-          <button className="btn-login" type="button" onClick={() => doRegister("grpc")}>
-            Criar conta com gRPC
-          </button>
-          <button className="btn-login outline" type="button" onClick={() => doRegister("rest")}>
-            Criar conta com REST
+          <button className="btn-login" type="button" onClick={() => doRegister()}>
+            Criar conta
           </button>
         </div>
 

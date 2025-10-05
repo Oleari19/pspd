@@ -20,6 +20,8 @@ using user::ScoreRequest;
 using user::ScoreResponse;
 using user::LoginRequest;
 using user::LoginResponse;
+using user::ListResponse;
+using user::ListRequest;
 
 // Lógica do serviço. Herdamos da classe de serviço gerada pelo protoc.
 class UserServiceImpl final : public User::Service {
@@ -121,10 +123,38 @@ class UserServiceImpl final : public User::Service {
         
         return Status::OK;
     }
+
+    Status ListByScore(ServerContext* context, const ListRequest* request,ListResponse* response) override {
+
+
+        pqxx::connection conn("dbname=serverB user=postgres password=password host=127.0.0.1 port=5434");
+
+		if (!conn.is_open()) {
+			std::cerr << "Não foi possível conectar ao banco!\n";
+			return Status::CANCELLED;
+		}
+		std::cout << "Conectado ao banco com sucesso!\n";
+
+        pqxx::work txn(conn);
+		pqxx::result r = txn.exec("select * from usuario order by score desc;");
+		txn.commit();
+
+        for(const auto& row : r){
+            Usuario* user = response->add_users();
+
+            user->set_nome(row["nome"].as<std::string>());
+            user->set_login("nulo");
+            user->set_remembertoken("nulo");
+            user->set_senha("nulo");
+            user->set_score(row["score"].as<int32_t>());
+        }
+
+        return Status::OK;
+    }
 };
 
 void RunServer() {
-    std::string server_address("0.0.0.0:50051");
+    std::string server_address("0.0.0.0:5050");
     UserServiceImpl service;
 
     ServerBuilder builder;

@@ -10,8 +10,23 @@ app.use(express.json());
 
 
 const QUIZ_PROTO_PATH = path.join(__dirname, "..", "serverA", "quiz.proto");
+const USER_PROTO_PATH = path.join(__dirname, "..", "serverB", "user.proto");
 // servidor C++ está escutando em 0.0.0.0:4242
 const GRPC_ADDR = process.env.GRPC_ADDR || "localhost:4242";
+const GRPCB_ADDR = "localhost:5050";
+
+const packageDefinitionB = protoLoader.loadSync(USER_PROTO_PATH, {
+    keepCase: true,
+    longs: String,
+    enums: String,
+    defaults: true,
+    oneofs: true,
+});
+
+const userProto = grpc.loadPackageDefinition(packageDefinitionB).user;
+
+const clientB = new userProto.User(GRPCB_ADDR, grpc.credentials.createInsecure());
+
 
 const packageDefinition = protoLoader.loadSync(QUIZ_PROTO_PATH, {
   keepCase: true,      // mantém nomes como estão no .proto
@@ -46,6 +61,106 @@ function toFrontItem(p) {
   };
 }
 
+async function createUser(userData) {
+  return new Promise((resolve, reject) => {
+    // monta a requisição no formato do .proto
+    const req = {
+      usuario: {
+        nome: userData.nome || "",
+        login: userData.login || "",
+        senha: userData.senha || "",
+        score: 0,
+        rememberToken: "",
+      },
+    };
+
+    clientB.CreateUsuario(req, (error, response) => {
+      if (error) {
+        console.error("Erro gRPC CreateUsuario:", error);
+        return reject(error);
+      }
+      resolve(response);
+    });
+  });
+}
+
+function updateScore(scoreData) {
+    return new Promise((resolve, reject) => {
+        clientB.UpdateScore(scoreData, (error, response) => {
+            if (error) return reject(error);
+            resolve(response);
+        });
+    });
+}
+
+
+app.post("/grpc/user/score", async (req, res) => {
+    console.log("👉 Rota /grpc/user/score chamada com corpo:", req.body);
+    try {
+        const scoreData = req.body;
+        const grpcResponse = await updateScore(scoreData);
+        console.log("✅ Resposta do gRPC:", grpcResponse);
+        return res.json(grpcResponse);
+    } catch (err) {
+        console.error("❌ Erro ao atualizar score:", err);
+        return res.status(502).json({ error: err.details || String(err) });
+    }
+});
+
+function listUsersByScore() {
+    return new Promise((resolve, reject) => {
+        // A mensagem ListRequest é vazia, então passamos um objeto vazio {} como parâmetro.
+        clientB.ListByScore({}, (error, response) => {
+            if (error) return reject(error);
+            // A resposta contém um campo 'users' que é um array.
+            resolve(response.users);
+        });
+    });
+}
+
+app.get("/grpc/ranking", async (req, res) => {
+    console.log("👉 Rota /grpc/ranking chamada");
+    try {
+        const users = await listUsersByScore();
+        console.log("✅ Resposta do gRPC:", users);
+        return res.json({ users });
+    } catch (err) {
+        console.error("❌ Erro ao listar usuários:", err);
+        return res.status(502).json({ error: err.details || String(err) });
+    }
+});
+
+
+function loginUser(credentials) {
+  return new Promise((resolve, reject) => {
+    const req = {
+      loginreq: credentials.loginreq || "",
+      senhareq: credentials.senhareq || "",
+    };
+
+    clientB.Login(req, (error, response) => {
+      if (error) {
+        console.error("Erro gRPC Login:", error);
+        return reject(error);
+      }
+      resolve(response);
+    });
+  });
+}
+
+app.post("/grpc/login", async (req, res) => {
+  console.log("👉 Rota /grpc/login chamada com corpo:", req.body);
+  try {
+    const credentials = req.body;
+    const grpcResponse = await loginUser(credentials);
+    console.log("✅ Resposta do gRPC:", grpcResponse);
+    return res.json(grpcResponse);
+  } catch (err) {
+    console.error("❌ Erro ao fazer login:", err);
+    return res.status(502).json({ error: err.details || String(err)+"oi" });
+  }
+});
+
 // GET /grpc/quiz  -> chama GetPerguntas
 app.get("/grpc/quiz", (req, res) => {
   quizClient.GetPerguntas({}, (err, reply) => {
@@ -58,6 +173,21 @@ app.get("/grpc/quiz", (req, res) => {
     return res.json(items);
   });
 });
+
+app.post("/grpc/user", async (req, res) => {
+  console.log("👉 Rota /grpc/user chamada com corpo:", req.body);
+  try {
+    const userData = req.body;
+    const grpcResponse = await createUser(userData);
+    console.log("✅ Resposta do gRPC:", grpcResponse);
+    return res.json(grpcResponse);
+  } catch (err) {
+    console.error("❌ Erro ao criar usuário:", err);
+    return res.status(502).json({ error: err.details || String(err) });
+  }
+});
+
+
 
 // POST /grpc/quiz -> chama CreatePergunta
 app.post("/grpc/quiz", (req, res) => {
@@ -77,6 +207,8 @@ app.post("/grpc/quiz", (req, res) => {
     return res.json(toFrontItem(created));
   });
 });
+
+
 
 // DELETE /grpc/quiz/:id -> chama DeletePergunta
 app.delete("/grpc/quiz/:id", (req, res) => {
@@ -101,8 +233,7 @@ app.put("/grpc/quiz/:id", (req, res) => {
 // OBS ESPAÇO PARA endpoints /rest/*
 
 // Porta do webserver
-const PORT = process.env.PORT || 8080;
+const PORT = process.env.PORT || 6969;
 app.listen(PORT, () => {
-  console.log(`Webserver REST<->gRPC rodando em http://localhost:${PORT}`);
-  console.log(`Proxy gRPC para ${GRPC_ADDR}`);
+  console.log(`a porra do servidor esta rodando em http://localhost:${PORT}`);
 });

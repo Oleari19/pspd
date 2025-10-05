@@ -1,76 +1,47 @@
 import { useState } from "react";
 import { useNavigate, useLocation, Link } from "react-router-dom";
 import "./Login.css";
-
-const REST_API_BASE = "http://localhost:8089/api";
-const REST_LOGIN_ENDPOINT = `${REST_API_BASE}/usuario/login`;
-
-async function restLogin(email, password) {
-  const res = await fetch(REST_LOGIN_ENDPOINT, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email, senha: password }),
-  });
-  const text = await res.text();
-  let data = null;
-  try {
-    data = text ? JSON.parse(text) : null;
-  } catch {
-    data = { raw: text };
-  }
-  if (!res.ok) {
-    const message = data?.message || data?.raw || text || "Falha no login REST.";
-    throw new Error(typeof message === "string" ? message : "Falha no login REST.");
-  }
-  return data;
-}
+import { useCookies } from 'react-cookie';
 
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPass] = useState("");
   const [ok, setOk] = useState("");
   const [err, setErr] = useState("");
+  const [token, setToken] = useState("");
+  const [cookies, setCookie, removeCookie] = useCookies(['nomeDoCookie']);
 
   const navigate = useNavigate();
   const location = useLocation();
   const next = location.state?.from?.pathname || "/quiz";
 
-  async function doLogin(mode) {
-    setErr(""); setOk("");
-
-    if (!email || !password) {
-      setErr("Digite email e senha.");
-      return;
-    }
-
-    if (mode === "rest") {
-      try {
-        const user = await restLogin(email, password);
-        const guessedName = (user?.email || email).split("@")[0] || "Aluno(a)";
-        const tokenBase = user?.codigoUsuario ?? user?.id ?? email;
-
-        localStorage.setItem("token", `rest-${tokenBase}`);
-        localStorage.setItem("apiMode", mode);
-        localStorage.setItem("basePrefix", REST_API_BASE);
-        localStorage.setItem("userName", guessedName);
-
-        setOk(`Login realizado via ${mode.toUpperCase()}!`);
-        setTimeout(() => navigate(next, { replace: true }), 500);
-      } catch (e) {
-        const message = e instanceof Error ? e.message : "Não foi possível autenticar via REST.";
-        setErr(message || "Não foi possível autenticar via REST.");
-      }
-      return;
-    }
-
-    localStorage.setItem("token", "demo-token");
-    localStorage.setItem("apiMode", mode);
-    localStorage.setItem("basePrefix", "/grpc");
-
-    const guessedName = email.split("@")[0] || "Aluno(a)";
-    localStorage.setItem("userName", guessedName);
-
-    setOk(`Login realizado via ${mode.toUpperCase()}!`);
+  function doLogin(mode) {
+    fetch("http://localhost:6969/grpc/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        loginreq: email,
+        senhareq: password,
+      }),
+    })
+      .then((res) => {
+        if (!res.ok) {
+          throw new Error(`HTTP ${res.status}`);
+        }
+        return res.text(); // ← mudei para .text() para testar o que o servidor devolve
+      })
+      .then((data) => {
+        console.log("Resposta do servidor:", data);
+        try {
+          const json = JSON.parse(data);
+          console.log("JSON parseado:", json);
+          setToken(json.tokenrem || "");
+          setCookie('token', json.tokenrem, { path: '/' });
+        }catch{
+          setErr("Resposta do servidor não é JSON válido.");
+        }
+      });
+    setOk(`Login realizado via `);
     setTimeout(() => navigate(next, { replace: true }), 500);
   }
 
@@ -99,11 +70,8 @@ export default function Login() {
 
         
         <div className="btn-row">
-          <button className="btn-login" type="button" onClick={() => doLogin("grpc")}>
+          <button className="btn-login" type="button" onClick={() => doLogin()}>
             Entrar com gRPC
-          </button>
-          <button className="btn-login outline" type="button" onClick={() => doLogin("rest")}>
-            Entrar com REST
           </button>
         </div>
 

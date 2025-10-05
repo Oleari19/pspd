@@ -60,18 +60,18 @@ target_link_libraries(user_server
 target_include_directories(user_server PUBLIC ${GENERATED_DIR})
 
 # --- Executável do cliente ---
-add_executable(user_client
-    client.cpp
-    ${PROTO_GENERATED_SOURCES}
-)
-add_dependencies(user_client user_proto_gen)
-target_link_libraries(user_client
-    PUBLIC
-    gRPC::grpc++
-    protobuf::libprotobuf # <-- Usando o target moderno do Protobuf
-    pqxx   # <- adiciona libpqxx
-    pq
-)
-target_include_directories(user_client PUBLIC ${GENERATED_DIR})
+#add_executable(user_client
+#    client.cpp
+#    ${PROTO_GENERATED_SOURCES}
+#)
+#add_dependencies(user_client user_proto_gen)
+#target_link_libraries(user_client
+#    PUBLIC
+#    gRPC::grpc++
+#    protobuf::libprotobuf # <-- Usando o target moderno do Protobuf
+#    pqxx   # <- adiciona libpqxx
+#    pq
+#)
+#target_include_directories(user_client PUBLIC ${GENERATED_DIR})
 
-message(STATUS "Configuração concluída. Para compilar, execute 'make'.")
+#message(STATUS "Configuração concluída. Para compilar, execute 'make'.")
