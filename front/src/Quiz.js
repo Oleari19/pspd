@@ -4,23 +4,6 @@ import "./Quiz.css";
 const REST_PREFIX = "/rest";
 const GRPC_PREFIX = "/grpc";
 
-const QUESTOES = [
-  {
-    id: 1,
-    texto: "Questão 1 exemplo",
-    alternativas: ["A", "B", "C", "D"],
-    indiceResposta: 1,
-    explicacao: "Explicação da questão 1",
-  },
-  {
-    id: 2,
-    texto: "Questão 2 exemplo",
-    alternativas: ["E", "F", "G", "H"],
-    indiceResposta: 2,
-    explicacao: "Explicação da questão 2",
-  },
-];
-
 function base(prefix) {
   return prefix === "/rest" ? REST_PREFIX : GRPC_PREFIX;
 }
@@ -38,16 +21,6 @@ async function jsonFetch(url, { method = "GET", body, token } = {}) {
   try { data = text ? JSON.parse(text) : null; } catch { data = { raw: text }; }
   if (!res.ok) throw new Error(`HTTP ${res.status}: ${text}`);
   return { data };
-}
-
-function listenSSE(url, onData) {
-  const es = new EventSource(url);
-  es.onmessage = (ev) => {
-    try { onData(JSON.parse(ev.data)); }
-    catch { onData(ev.data); }
-  };
-  es.onerror = () => es.close();
-  return () => es.close();
 }
 
 function Alternativa({ rotulo, texto, selecionada, estado, desabilitada, aoClicar }) {
@@ -90,20 +63,56 @@ function ModeToggle({ prefix, setPrefix }) {
 }
 
 export default function Quiz() {
+  const [questoes, setQuestoes] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [err, setErr] = useState("");
   const [etapa, setEtapa] = useState(0);
   const [selecionada, setSelecionada] = useState(null);
   const [respostas, setRespostas] = useState([]);
   const [mostrarResposta, setMostrarResposta] = useState(false);
-
   const [prefix, setPrefix] = useState("/grpc");
-  const token = typeof localStorage !== "undefined" ? localStorage.getItem("token") || "" : "";
 
-  const [hints, setHints] = useState([]);
+  const token = typeof localStorage !== "undefined" ? localStorage.getItem("token") || "" : "";
   const stopRef = useRef(null);
 
-  const total = QUESTOES.length;
-  const questao = QUESTOES[etapa];
-  const progresso = Math.round((etapa / total) * 100);
+  // ===== carregar perguntas do backend =====
+  useEffect(() => {
+    async function carregarQuestoes() {
+      try {
+        setLoading(true);
+        const { data } = await jsonFetch(`${base(prefix)}/quiz`, { token });
+        const formatado = Array.isArray(data)
+          ? data.map(q => ({
+              id: q.id,
+              texto: q.text || q.texto,
+              alternativas: q.options || q.alternativas,
+              indiceResposta: q.correctIndex ?? q.indice_resposta,
+              explicacao: q.explanation || q.explicacao || "",
+            }))
+          : [];
+        setQuestoes(formatado);
+      } catch (e) {
+        console.error("Erro ao carregar questões:", e);
+        setErr("Falha ao buscar perguntas no servidor. Exibindo exemplo local.");
+        setQuestoes([
+          {
+            id: 1,
+            texto: "Questão de exemplo local",
+            alternativas: ["A", "B", "C", "D"],
+            indiceResposta: 1,
+            explicacao: "Exemplo de fallback local.",
+          },
+        ]);
+      } finally {
+        setLoading(false);
+      }
+    }
+    carregarQuestoes();
+  }, [prefix]);
+
+  const total = questoes.length;
+  const questao = questoes[etapa];
+  const progresso = total > 0 ? Math.round((etapa / total) * 100) : 0;
   const pontuacao = respostas.filter((r) => r.correta).length;
 
   async function validarNoBackend(questionId, answerText) {
@@ -117,7 +126,7 @@ export default function Quiz() {
   }
 
   async function Confirmar() {
-    if (selecionada === null) return;
+    if (selecionada === null || !questao) return;
     let correta = selecionada === questao.indiceResposta;
 
     try {
@@ -134,8 +143,10 @@ export default function Quiz() {
     setMostrarResposta(false);
     setSelecionada(null);
     setEtapa((e) => e + 1);
-    pararHints();
-    setHints([]);
+    if (stopRef.current) {
+      stopRef.current();
+      stopRef.current = null;
+    }
   }
 
   function Reiniciar() {
@@ -143,18 +154,31 @@ export default function Quiz() {
     setSelecionada(null);
     setRespostas([]);
     setMostrarResposta(false);
-    pararHints();
-    setHints([]);
-  }
-
-  function pararHints() {
     if (stopRef.current) {
       stopRef.current();
       stopRef.current = null;
     }
   }
 
-  useEffect(() => () => pararHints(), []);
+  if (loading) {
+    return (
+      <div className="tela">
+        <p>Carregando perguntas...</p>
+      </div>
+    );
+  }
+
+  if (err) {
+    console.warn(err);
+  }
+
+  if (total === 0) {
+    return (
+      <div className="tela">
+        <p>Nenhuma pergunta encontrada no banco.</p>
+      </div>
+    );
+  }
 
   if (etapa >= total) {
     return (
@@ -163,9 +187,6 @@ export default function Quiz() {
           <h1 className="titulo-cartao">Resultado</h1>
           <p className="progresso-cartao">
             Você acertou <b>{pontuacao}</b> de <b>{total}</b> perguntas 🎉
-          </p>
-                    <p className="progresso-cartao">
-            Pontuação final: <b>{pontuacao}</b>
           </p>
           <button className="btn-reiniciar" onClick={Reiniciar}>
             Refazer quiz
@@ -221,7 +242,6 @@ export default function Quiz() {
             <button className="btn-reiniciar" onClick={Reiniciar}>
               Reiniciar
             </button>
-
           </div>
         ) : (
           <div className="feedback">
@@ -239,8 +259,6 @@ export default function Quiz() {
           </div>
         )}
       </section>
-
-
     </main>
   );
 }
