@@ -1,16 +1,19 @@
 services:
   db:
     image: mysql:8.0
+    container_name: pspd-mysql
     environment:
       MYSQL_ROOT_PASSWORD: root
       MYSQL_DATABASE: dbspringboot
       TZ: UTC
-    # ❗ Recomendado: NÃO expor 3306 no host para evitar conflito com MySQL local.
-    # Se você realmente precisar expor, troque para "3307:3306".
+    # Recomenda-se nao expor 3306 para evitar conflito com MySQL local.
+    # Para acesso externo, altere para "3307:3306".
     # ports:
     #   - "3307:3306"
     volumes:
       - db_data:/var/lib/mysql
+      - ./springboot/demo/src/main/resources/schema.sql:/docker-entrypoint-initdb.d/001-schema.sql:ro
+      - ./springboot/demo/src/main/resources/data.sql:/docker-entrypoint-initdb.d/002-data.sql:ro
     command:
       - --default-authentication-plugin=mysql_native_password
       - --character-set-server=utf8mb4
@@ -35,6 +38,7 @@ services:
       SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/dbspringboot?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
       SPRING_DATASOURCE_USERNAME: root
       SPRING_DATASOURCE_PASSWORD: root
+      SPRING_SQL_INIT_MODE: always
       PORT: "8089"
       TZ: UTC
     ports:
@@ -44,7 +48,8 @@ services:
   adminer:
     image: adminer
     depends_on:
-      - db
+      db:
+        condition: service_started
     ports:
       - "8080:8080"
     restart: unless-stopped
