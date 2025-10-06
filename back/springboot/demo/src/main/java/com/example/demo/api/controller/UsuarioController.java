@@ -12,6 +12,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/usuario")
+@CrossOrigin(originPatterns = {"http://localhost:*", "http://127.0.0.1:*"}, allowedHeaders = "*", allowedMethods = {RequestMethod.GET, RequestMethod.POST, RequestMethod.PUT, RequestMethod.PATCH, RequestMethod.DELETE, RequestMethod.OPTIONS}, allowCredentials = "true", maxAge = 3600)
 @RequiredArgsConstructor
 public class UsuarioController {
 
@@ -36,6 +37,11 @@ public class UsuarioController {
     @PostMapping("/login")
     public ResponseEntity<UsuarioDTO> login(@RequestBody LoginRequestDTO loginRequest) {
         return ResponseEntity.ok(usuarioService.autenticar(loginRequest));
+    }
+
+    @RequestMapping(value = "/login", method = RequestMethod.OPTIONS)
+    public ResponseEntity<Void> loginOptions() {
+        return ResponseEntity.ok().build();
     }
 
     @PutMapping("/{id}")
