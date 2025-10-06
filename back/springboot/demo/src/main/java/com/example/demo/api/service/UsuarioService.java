@@ -29,22 +29,29 @@ public class UsuarioService {
     @Transactional(readOnly = true)
     public UsuarioDTO buscarPorId(Integer id) {
         UsuarioEntity entity = usuarioRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuário não encontrado"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuario nao encontrado"));
         return mapearParaDTO(entity);
     }
 
     @Transactional
     public UsuarioDTO criar(UsuarioDTO usuarioDTO) {
+        if (usuarioDTO == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Dados obrigatorios nao enviados");
+        }
+
+        if (usuarioRepository.existsByEmail(usuarioDTO.getEmail())) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Email ja cadastrado");
+        }
+
         UsuarioEntity entity = new UsuarioEntity();
         aplicarValores(entity, usuarioDTO);
         UsuarioEntity salvo = usuarioRepository.save(entity);
         return mapearParaDTO(salvo);
     }
-
     @Transactional
     public UsuarioDTO atualizar(Integer id, UsuarioDTO usuarioDTO) {
         UsuarioEntity existente = usuarioRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuário não encontrado"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuario nao encontrado"));
 
         aplicarValores(existente, usuarioDTO);
         UsuarioEntity atualizado = usuarioRepository.save(existente);
@@ -54,7 +61,7 @@ public class UsuarioService {
     @Transactional
     public void deletar(Integer id) {
         if (!usuarioRepository.existsById(id)) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuário não encontrado");
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuario nao encontrado");
         }
 
         usuarioRepository.deleteById(id);
@@ -63,7 +70,7 @@ public class UsuarioService {
     @Transactional(readOnly = true)
     public UsuarioDTO autenticar(LoginRequestDTO loginRequest) {
         UsuarioEntity usuario = usuarioRepository.findByEmailAndSenha(loginRequest.getEmail(), loginRequest.getSenha())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Credenciais inválidas"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Credenciais invalidas"));
 
         return mapearParaDTO(usuario);
     }
@@ -88,6 +95,11 @@ public class UsuarioService {
 
         entity.setEmail(dto.getEmail());
         entity.setSenha(dto.getSenha());
-        entity.setPontuacao(dto.getPontuacao());
+        entity.setPontuacao(dto.getPontuacao() != null ? dto.getPontuacao() : 0);
     }
 }
+
+
+
+
+

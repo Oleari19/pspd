@@ -25,10 +25,14 @@ public class UsuarioEntity {
     @Column(name = "PONTUACAO", nullable = false)
     private Integer pontuacao;
 
-  
-
-
-
-
+    @PrePersist
+    @PreUpdate
+    private void ensurePontuacao() {
+        if (pontuacao == null) {
+            pontuacao = 0;
+        }
+    }
 
 }
+
+
