@@ -1,10 +1,8 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import "./Quiz.css";
 
 const REST_API_BASE = "http://localhost:8089/api";
 const REST_QUIZ_ENDPOINT = `${REST_API_BASE}/pergunta`;
-const GRPC_PREFIX = "/grpc";
-const GRPC_QUIZ_ENDPOINT = `${GRPC_PREFIX}/quiz`;
 
 async function jsonFetch(url, { method = "GET", body, token } = {}) {
   const headers = { "Content-Type": "application/json" };
@@ -39,27 +37,6 @@ function Alternativa({ rotulo, texto, selecionada, estado, desabilitada, aoClica
   );
 }
 
-function ModeToggle({ prefix, setPrefix }) {
-  return (
-    <div className="toggle">
-      <button
-        className={prefix === "/rest" ? "btn active" : "btn"}
-        onClick={() => setPrefix("/rest")}
-        type="button"
-      >
-        REST
-      </button>
-      <button
-        className={prefix === "/grpc" ? "btn active" : "btn"}
-        onClick={() => setPrefix("/grpc")}
-        type="button"
-      >
-        gRPC
-      </button>
-    </div>
-  );
-}
-
 export default function Quiz() {
   const [questoes, setQuestoes] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -68,18 +45,16 @@ export default function Quiz() {
   const [selecionada, setSelecionada] = useState(null);
   const [respostas, setRespostas] = useState([]);
   const [mostrarResposta, setMostrarResposta] = useState(false);
-  const [prefix, setPrefix] = useState("/grpc");
 
   const token = typeof localStorage !== "undefined" ? localStorage.getItem("token") || "" : "";
-  const stopRef = useRef(null);
 
-  // ===== carregar perguntas do backend =====
+  // ===== carregar perguntas do backend (REST) =====
   useEffect(() => {
     async function carregarQuestoes() {
       try {
         setLoading(true);
-        const quizEndpoint = prefix === "/rest" ? REST_QUIZ_ENDPOINT : GRPC_QUIZ_ENDPOINT;
-        const { data } = await jsonFetch(quizEndpoint, { token });
+        const { data } = await jsonFetch(REST_QUIZ_ENDPOINT, { token });
+
         const formatado = Array.isArray(data)
           ? data.map(q => ({
               id: q.id ?? q.codigoPergunta ?? q.codigo_pergunta,
@@ -101,6 +76,7 @@ export default function Quiz() {
               explicacao: q.explanation || q.explicacao || "",
             }))
           : [];
+
         setQuestoes(formatado);
       } catch (e) {
         console.error("Erro ao carregar questões:", e);
@@ -119,35 +95,18 @@ export default function Quiz() {
       }
     }
     carregarQuestoes();
-  }, [prefix, token]);
+  }, [token]);
 
   const total = questoes.length;
   const questao = questoes[etapa];
   const progresso = total > 0 ? Math.round((etapa / total) * 100) : 0;
   const pontuacao = respostas.filter((r) => r.correta).length;
 
-  async function validarNoBackend(questionId, answerText) {
-    if (prefix === "/rest") {
-      return {};
-    }
-    const url = `${GRPC_QUIZ_ENDPOINT}/${questionId}/validate`;
-    const { data } = await jsonFetch(url, {
-      method: "POST",
-      body: { answer: answerText },
-      token,
-    });
-    return data;
-  }
-
   async function Confirmar() {
     if (selecionada === null || !questao) return;
-    let correta = selecionada === questao.indiceResposta;
 
-    try {
-      const result = await validarNoBackend(questao.id, questao.alternativas[selecionada]);
-      if (typeof result?.correct === "boolean") correta = result.correct;
-      if (result?.explanation) questao.explicacao = result.explanation;
-    } catch {}
+    // No REST puro, validamos localmente usando o índice que já veio do backend.
+    const correta = selecionada === questao.indiceResposta;
 
     setRespostas((prev) => [...prev, { idQuestao: questao.id, correta }]);
     setMostrarResposta(true);
@@ -157,10 +116,6 @@ export default function Quiz() {
     setMostrarResposta(false);
     setSelecionada(null);
     setEtapa((e) => e + 1);
-    if (stopRef.current) {
-      stopRef.current();
-      stopRef.current = null;
-    }
   }
 
   function Reiniciar() {
@@ -168,10 +123,6 @@ export default function Quiz() {
     setSelecionada(null);
     setRespostas([]);
     setMostrarResposta(false);
-    if (stopRef.current) {
-      stopRef.current();
-      stopRef.current = null;
-    }
   }
 
   if (loading) {
@@ -182,9 +133,7 @@ export default function Quiz() {
     );
   }
 
-  if (err) {
-    console.warn(err);
-  }
+  if (err) console.warn(err);
 
   if (total === 0) {
     return (
@@ -218,7 +167,6 @@ export default function Quiz() {
             <strong>Pergunta {etapa + 1}</strong> / {total}
           </div>
           <div className="progresso-quiz">{progresso}% concluído</div>
-          <ModeToggle prefix={prefix} setPrefix={setPrefix} />
         </header>
 
         <h2 className="questao-quiz">{questao.texto}</h2>
@@ -251,7 +199,7 @@ export default function Quiz() {
               disabled={selecionada === null}
               onClick={Confirmar}
             >
-              Confirmar ({prefix.replace("/", "").toUpperCase()})
+              Confirmar (REST)
             </button>
             <button className="btn-reiniciar" onClick={Reiniciar}>
               Reiniciar

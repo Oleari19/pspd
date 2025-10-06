@@ -90,3 +90,9 @@ cd build && cmake .. && make && ./quiz_server
 cd ../../webserver && npm install && npm start
 cd ../frontend && npm install && npm start
 ```
+
+
+
+
+docker compose down -v         # remove os volumes (cuidado: apaga dados)
+docker compose up -d

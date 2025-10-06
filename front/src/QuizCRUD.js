@@ -3,8 +3,6 @@ import "./QuizCRUD.css";
 
 const REST_API_BASE = "http://localhost:8089/api";
 const REST_QUIZ_ENDPOINT = `${REST_API_BASE}/pergunta`;
-const GRPC_PREFIX = "/grpc";
-const GRPC_QUIZ_ENDPOINT = `${GRPC_PREFIX}/quiz`;
 
 function ensureOptionsArray(options = []) {
   const arr = Array.isArray(options) ? [...options] : [];
@@ -30,33 +28,22 @@ function normalizeQuestion(item) {
   return { id, text, options, correctIndex, explanation };
 }
 
-function toRestPayload(question) {
-  const normalized = normalizeQuestion(question) || {
-    id: null,
-    text: "",
-    options: ["", "", "", ""],
-    correctIndex: 0,
-    explanation: "",
+function toRestPayload(q) {
+  const n = normalizeQuestion(q) || {
+    id: null, text: "", options: ["", "", "", ""], correctIndex: 0, explanation: "",
   };
   return {
-    codigoPergunta: normalized.id,
-    pergunta: normalized.text,
-    q1: normalized.options[0] ?? "",
-    q2: normalized.options[1] ?? "",
-    q3: normalized.options[2] ?? "",
-    q4: normalized.options[3] ?? "",
-    explicacao: normalized.explanation ?? "",
-    indiceResposta: normalized.correctIndex ?? 0,
+    codigoPergunta: n.id,
+    pergunta: n.text,
+    q1: n.options[0] ?? "",
+    q2: n.options[1] ?? "",
+    q3: n.options[2] ?? "",
+    q4: n.options[3] ?? "",
+    explicacao: n.explanation ?? "",
+    indiceResposta: n.correctIndex ?? 0,
   };
 }
 
-function listEndpointFor(mode) {
-  return mode === "rest" ? REST_QUIZ_ENDPOINT : GRPC_QUIZ_ENDPOINT;
-}
-
-function itemEndpointFor(mode, id) {
-  return mode === "rest" ? `${REST_QUIZ_ENDPOINT}/${id}` : `${GRPC_QUIZ_ENDPOINT}/${id}`;
-}
 async function jsonFetch(url, { method = "GET", body, token } = {}) {
   const headers = { "Content-Type": "application/json" };
   if (token) headers["Authorization"] = `Bearer ${token}`;
@@ -67,7 +54,6 @@ async function jsonFetch(url, { method = "GET", body, token } = {}) {
   if (!res.ok) throw new Error(`HTTP ${res.status}: ${text}`);
   return data;
 }
-
 
 const DEMO_DATA = [
   {
@@ -86,30 +72,7 @@ const DEMO_DATA = [
   },
 ];
 
-
-function ModeToggle({ mode, setMode }) {
-  return (
-    <div className="crud-toggle">
-      <button
-        type="button"
-        className={mode === "rest" ? "crud-btn active" : "crud-btn"}
-        onClick={() => setMode("rest")}
-      >
-        REST
-      </button>
-      <button
-        type="button"
-        className={mode === "grpc" ? "crud-btn active" : "crud-btn"}
-        onClick={() => setMode("grpc")}
-      >
-        gRPC
-      </button>
-    </div>
-  );
-}
-
-
-function QuestionForm({ value, onChange, onSubmit, onCancel, submitting, mode }) {
+function QuestionForm({ value, onChange, onSubmit, onCancel, submitting }) {
   const v = value;
   function set(field, val) { onChange({ ...v, [field]: val }); }
   function setOption(idx, val) {
@@ -161,9 +124,7 @@ function QuestionForm({ value, onChange, onSubmit, onCancel, submitting, mode })
 
       <div className="crud-actions">
         <button className="crud-btn primary" disabled={submitting} type="submit">
-          {submitting
-            ? `Salvando (${mode === "rest" ? "REST" : "gRPC"})...`
-            : `Salvar (${mode === "rest" ? "REST" : "gRPC"})`}
+          {submitting ? "Salvando (REST)..." : "Salvar (REST)"}
         </button>
         <button className="crud-btn outline" type="button" onClick={onCancel}>
           Cancelar
@@ -173,9 +134,7 @@ function QuestionForm({ value, onChange, onSubmit, onCancel, submitting, mode })
   );
 }
 
-
 export default function QuizCRUD() {
-  const [mode, setMode] = useState("grpc");
   const [items, setItems] = useState([]);
   const [q, setQ] = useState("");
   const [loading, setLoading] = useState(false);
@@ -187,27 +146,25 @@ export default function QuizCRUD() {
   const load = useCallback(async () => {
     setErr(""); setLoading(true);
     try {
-      const data = await jsonFetch(listEndpointFor(mode), { token });
+      const data = await jsonFetch(REST_QUIZ_ENDPOINT, { token });
       const arr = Array.isArray(data) ? data : data?.items || [];
-      const normalizados = arr
-        .map((it) => normalizeQuestion(it))
-        .filter((it) => it != null);
+      const normalizados = arr.map(normalizeQuestion).filter(Boolean);
       setItems(normalizados);
     } catch {
       setItems(DEMO_DATA);
       setErr("(demo) usando dados locais, não consegui buscar no backend.");
     } finally { setLoading(false); }
-  }, [mode, token]);
+  }, [token]);
 
   async function createItem(payload) {
     try {
-      const endpoint = listEndpointFor(mode);
-      const body = mode === "rest" ? toRestPayload(payload) : payload;
-      const created = await jsonFetch(endpoint, { method: "POST", body, token });
+      const created = await jsonFetch(REST_QUIZ_ENDPOINT, {
+        method: "POST",
+        body: toRestPayload(payload),
+        token
+      });
       const normalizado = normalizeQuestion(created);
-      if (normalizado?.id != null) {
-        return normalizado;
-      }
+      if (normalizado?.id != null) return normalizado;
       const fallback = normalizeQuestion(payload) || payload;
       const nextId = Math.max(0, ...items.map(i => i.id || 0)) + 1;
       return { ...fallback, id: nextId };
@@ -220,19 +177,18 @@ export default function QuizCRUD() {
 
   async function updateItem(id, payload) {
     try {
-      const endpoint = itemEndpointFor(mode, id);
-      const body = mode === "rest" ? toRestPayload({ ...payload, id }) : payload;
-      await jsonFetch(endpoint, { method: "PUT", body, token });
-    }
-    catch {}
+      await jsonFetch(`${REST_QUIZ_ENDPOINT}/${id}`, {
+        method: "PUT",
+        body: toRestPayload({ ...payload, id }),
+        token
+      });
+    } catch {}
   }
 
   async function removeItem(id) {
     try {
-      const endpoint = itemEndpointFor(mode, id);
-      await jsonFetch(endpoint, { method: "DELETE", token });
-    }
-    catch {}
+      await jsonFetch(`${REST_QUIZ_ENDPOINT}/${id}`, { method: "DELETE", token });
+    } catch {}
     finally { setItems(prev => prev.filter(i => i.id !== id)); }
   }
 
@@ -278,12 +234,9 @@ export default function QuizCRUD() {
 
           {!editing && (
             <div className="crud-actions-right">
-              <ModeToggle mode={mode} setMode={setMode} />
               <button className="crud-btn primary" onClick={newEmpty}>+ Nova questão</button>
               <button className="crud-btn" onClick={load} disabled={loading}>
-                {loading
-                  ? `Atualizando (${mode === "rest" ? "REST" : "gRPC"})...`
-                  : `Atualizar (${mode === "rest" ? "REST" : "gRPC"})`}
+                {loading ? "Atualizando (REST)..." : "Atualizar (REST)"}
               </button>
             </div>
           )}
@@ -309,7 +262,6 @@ export default function QuizCRUD() {
             onSubmit={submitForm}
             onCancel={() => setEditing(null)}
             submitting={submitting}
-            mode={mode}
           />
         ) : (
           <div className="crud-table-wrap">

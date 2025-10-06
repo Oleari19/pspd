@@ -28,7 +28,7 @@ export default function Cadastro() {
 
   const navigate = useNavigate();
 
-  async function doRegister(mode) {
+  async function doRegisterRest() {
     setErr(""); setOk("");
 
     if (!name || !emailReg || !passReg || !passReg2) {
@@ -40,43 +40,23 @@ export default function Cadastro() {
       return;
     }
 
-    const isGrpc = mode === "grpc";
-    const registerUrl = isGrpc ? "/grpc/auth/register" : REST_REGISTER_ENDPOINT;
-
     try {
-      if (isGrpc) {
-        await jsonPost(registerUrl, {
-          name,
-          email: emailReg,
-          password: passReg,
-        });
-      } else {
-        await jsonPost(registerUrl, {
-          email: emailReg,
-          senha: passReg,
-          pontuacao: 0,
-        });
-      }
+      await jsonPost(REST_REGISTER_ENDPOINT, {
+        email: emailReg,
+        senha: passReg,
+        pontuacao: 0,
+      });
 
-      localStorage.setItem("apiMode", mode);
-      localStorage.setItem("basePrefix", isGrpc ? "/grpc" : REST_API_BASE);
+      // Persistência padrão do app em modo REST
+      localStorage.setItem("apiMode", "rest");
+      localStorage.setItem("basePrefix", REST_API_BASE);
       localStorage.setItem("demoUser", JSON.stringify({ name, email: emailReg }));
 
-      setOk(`Conta criada com sucesso via ${mode.toUpperCase()}!`);
+      setOk("Conta criada com sucesso!");
       setTimeout(() => navigate("/login", { replace: true }), 900);
     } catch (e) {
-      if (isGrpc) {
-        localStorage.setItem("apiMode", mode);
-        localStorage.setItem("basePrefix", "/grpc");
-        localStorage.setItem("demoUser", JSON.stringify({ name, email: emailReg }));
-
-        setOk(`Conta criada (demo) via ${mode.toUpperCase()}.`);
-        setTimeout(() => navigate("/login", { replace: true }), 900);
-        return;
-      }
-
-      const message = e instanceof Error ? e.message : "Não foi possível criar a conta via REST.";
-      setErr(message || "Não foi possível criar a conta via REST.");
+      const message = e instanceof Error ? e.message : "Não foi possível criar a conta.";
+      setErr(message || "Não foi possível criar a conta.");
     }
   }
 
@@ -120,13 +100,9 @@ export default function Cadastro() {
           onChange={(e) => setPassReg2(e.target.value)}
         />
 
-        
         <div className="btn-row">
-          <button className="btn-login" type="button" onClick={() => doRegister("grpc")}>
-            Criar conta com gRPC
-          </button>
-          <button className="btn-login outline" type="button" onClick={() => doRegister("rest")}>
-            Criar conta com REST
+          <button className="btn-login" type="button" onClick={doRegisterRest}>
+            Criar conta (REST)
           </button>
         </div>
 
