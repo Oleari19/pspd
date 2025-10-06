@@ -29,7 +29,7 @@ class UserServiceImpl final : public User::Service {
     Status CreateUsuario(ServerContext* context, const CreateUserRequest* request,
                          CreateUserResponse* response) override {
         
-        pqxx::connection conn("dbname=serverB user=postgres password=password host=127.0.0.1 port=5434");
+        pqxx::connection conn("dbname=serverB user=postgres password=password host=postgres-user-service port=5434");
 
 		if (!conn.is_open()) {
 			std::cerr << "Não foi possível conectar ao banco!\n";

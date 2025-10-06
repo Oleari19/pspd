@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgres-quiz-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres-quiz
+  template:
+    metadata:
+      labels:
+        app: postgres-quiz
+    spec:
+      containers:
+      - name: postgres
+        image: postgres:16
+        ports:
+        - containerPort: 5433
+        env:
+        - name: POSTGRES_USER
+          value: "meuusuario"
+        - name: POSTGRES_PASSWORD
+          value: "minhasenha"
+        - name: POSTGRES_DB
+          value: "meubanco"
+        # Volume para os dados não serem perdidos se o Pod reiniciar
+        volumeMounts:
+        - name: postgres-quiz-storage
+          mountPath: /var/lib/postgresql/data
+      volumes:
+      - name: postgres-quiz-storage
+        # No Minikube, um emptyDir simples é suficiente para testes.
+        # Para produção, usaríamos PersistentVolumeClaim.
+        emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres-quiz-service # <-- ESTE é o nome que usamos no código C++!
+spec:
+  selector:
+    app: postgres-quiz # Direciona o tráfego para os pods com esta label
+  ports:
+    - protocol: TCP
+      port: 5433       # Porta que o serviço expõe
+      targetPort: 5433 # Porta do contêiner

@@ -3,8 +3,9 @@ cmake_minimum_required(VERSION 3.10)
 
 # Nome do projeto e linguagem
 project(GrpcUserProject CXX)
-set(CMAKE_CXX_STANDARD 14)
-set(CMAKE_CXX_STANDARD_REQUIRED True)
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
 
 # --- Encontrar as dependências ---
 find_package(Protobuf REQUIRED)

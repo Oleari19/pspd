@@ -25,7 +25,7 @@ class QuizServiceImpl final : public Quiz::Service {
 
 	Status DeletePergunta(ServerContext* context, const PerguntaId* request, StatusRetorno* response) override{
 
-		pqxx::connection conn("dbname=meubanco user=meuusuario password=minhasenha host=127.0.0.1 port=5433");
+		pqxx::connection conn("dbname=meubanco user=meuusuario password=minhasenha host=postgres-quiz-service port=5433");
 
 		if (!conn.is_open()) {
 			std::cerr << "Não foi possível conectar ao banco!\n";
