@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import "./QuizCRUD.css";
 
-const REST_API_BASE = "http://localhost:808p/api";
+const REST_API_BASE = "http://localhost:8089/api";
 const REST_QUIZ_ENDPOINT = `${REST_API_BASE}/pergunta`;
 const GRPC_PREFIX = "/grpc";
 const GRPC_QUIZ_ENDPOINT = `${GRPC_PREFIX}/quiz`;
