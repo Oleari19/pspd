@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: grpc-user-container
-        image: grpc-servidor-user:v1 # O nome da segunda imagem
+        image: grpc-user:v1 # O nome da segunda imagem
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 5050

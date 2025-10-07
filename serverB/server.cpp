@@ -84,7 +84,7 @@ class UserServiceImpl final : public User::Service {
         // Exemplo fictício:
         std::cout << "Atualizando pontuação para: " << newScore<<" e token ="<< tok << std::endl;
 
-        pqxx::connection conn("dbname=serverB user=postgres password=password host=127.0.0.1 port=5434");
+        pqxx::connection conn("dbname=serverB user=postgres password=password host=postgres-user-service port=5434");
 
 		if (!conn.is_open()) {
 			std::cerr << "Não foi possível conectar ao banco!\n";
@@ -105,7 +105,7 @@ class UserServiceImpl final : public User::Service {
         std::string login = request->loginreq();
 
 
-        pqxx::connection conn("dbname=serverB user=postgres password=password host=127.0.0.1 port=5434");
+        pqxx::connection conn("dbname=serverB user=postgres password=password host=postgres-user-service port=5434");
 
 		if (!conn.is_open()) {
 			std::cerr << "Não foi possível conectar ao banco!\n";
@@ -124,24 +124,27 @@ class UserServiceImpl final : public User::Service {
         return Status::OK;
     }
 
-    Status ListByScore(ServerContext* context, const ListRequest* request,ListResponse* response) override {
+    Status ListByScore(ServerContext* context, const ListRequest* request, ListResponse* response) override {
+    std::cout << "DEBUG: A REQUISIÇÃO CHEGOU DENTRO DA FUNÇÃO ListByScore." << std::endl;
 
+    try {
+        pqxx::connection conn("dbname=serverB user=postgres password=password host=postgres-user-service port=5434");
 
-        pqxx::connection conn("dbname=serverB user=postgres password=password host=127.0.0.1 port=5434");
-
-		if (!conn.is_open()) {
-			std::cerr << "Não foi possível conectar ao banco!\n";
-			return Status::CANCELLED;
-		}
-		std::cout << "Conectado ao banco com sucesso!\n";
+        if (!conn.is_open()) {
+            std::cerr << "ERRO: Não foi possível conectar ao banco!" << std::endl;
+            return Status(grpc::StatusCode::UNAVAILABLE, "Falha ao conectar no banco de dados.");
+        }
+        std::cout << "DEBUG: Conectado ao banco com sucesso." << std::endl;
 
         pqxx::work txn(conn);
-		pqxx::result r = txn.exec("select * from usuario order by score desc;");
-		txn.commit();
+        std::cout << "DEBUG: Executando a query 'select * from usuario order by score desc;'" << std::endl;
+        
+        pqxx::result r = txn.exec("select * from usuario order by score desc;");
+        txn.commit();
 
-        for(const auto& row : r){
+        std::cout << "DEBUG: Query executada. Processando " << r.size() << " resultados." << std::endl;
+        for (const auto& row : r) {
             Usuario* user = response->add_users();
-
             user->set_nome(row["nome"].as<std::string>());
             user->set_login("nulo");
             user->set_remembertoken("nulo");
@@ -149,8 +152,15 @@ class UserServiceImpl final : public User::Service {
             user->set_score(row["score"].as<int32_t>());
         }
 
+        std::cout << "DEBUG: Processamento concluído com sucesso." << std::endl;
         return Status::OK;
+
+    } catch (const std::exception &e) {
+        // ESSA É A PARTE MAIS IMPORTANTE! AGORA VOCÊ VERÁ O ERRO REAL.
+        std::cerr << "ERRO FATAL: Uma exceção foi capturada em ListByScore: " << e.what() << std::endl;
+        return Status(grpc::StatusCode::INTERNAL, "Erro interno no servidor ao consultar o banco de dados.");
     }
+}
 };
 
 void RunServer() {
@@ -166,6 +176,7 @@ void RunServer() {
     // Constrói e inicia o servidor gRPC.
     std::unique_ptr<Server> server(builder.BuildAndStart());
     std::cout << "Servidor escutando em " << server_address << std::endl;
+
 
     // Aguarda o servidor ser finalizado. O servidor rodará até que o processo seja morto.
     server->Wait();
