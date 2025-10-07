@@ -1,9 +1,7 @@
 package com.example.demo.api.model;
 
-import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.*;
-import java.util.List;
 
 @Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
 @Entity
@@ -12,8 +10,7 @@ public class PerguntaEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "codigo_PERGUNTA", nullable = false, updatable = false,
-            columnDefinition = "INT AUTO_INCREMENT")
+    @Column(name = "codigo_PERGUNTA", nullable = false, updatable = false)
     private Integer codigoPergunta;
 
     @Column(name = "PERGUNTA", nullable = false, length = 500)
@@ -34,12 +31,8 @@ public class PerguntaEntity {
     @Column(name = "EXPLICACAO", nullable = false, length = 500)
     private String explicacao;
 
-    @Column(name = "INDICE-RESPOSTA", nullable = false)
+    @Column(name = "INDICE_RESPOSTA", nullable = false)
     private Integer indiceResposta;
 
-
-
-
-
-
 }
+

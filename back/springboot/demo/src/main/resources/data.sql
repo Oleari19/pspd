@@ -4,7 +4,7 @@ WHERE NOT EXISTS (
     SELECT 1 FROM TB_USUARIO WHERE EMAIL = 'demo@pspd.local'
 );
 
-INSERT INTO TB_PERGUNTA (PERGUNTA, Q1, Q2, Q3, Q4, EXPLICACAO, `INDICE-RESPOSTA`)
+INSERT INTO TB_PERGUNTA (PERGUNTA, Q1, Q2, Q3, Q4, EXPLICACAO, INDICE_RESPOSTA)
 SELECT 'Qual linguagem e usada para desenvolver este backend?',
        'Java', 'Python', 'Go', 'Ruby',
        'O projeto usa Spring Boot, logo a linguagem e Java.',
@@ -13,11 +13,11 @@ WHERE NOT EXISTS (
     SELECT 1 FROM TB_PERGUNTA WHERE PERGUNTA = 'Qual linguagem e usada para desenvolver este backend?'
 );
 
-INSERT INTO TB_PERGUNTA (PERGUNTA, Q1, Q2, Q3, Q4, EXPLICACAO, `INDICE-RESPOSTA`)
+INSERT INTO TB_PERGUNTA (PERGUNTA, Q1, Q2, Q3, Q4, EXPLICACAO, INDICE_RESPOSTA)
 SELECT 'Qual banco de dados esta empacotado no docker-compose?',
        'PostgreSQL', 'MySQL', 'MongoDB', 'SQLite',
-       'O docker-compose utiliza a imagem oficial do MySQL 8.0.',
-       2
+       'O docker-compose agora utiliza a imagem oficial do PostgreSQL.',
+       1
 WHERE NOT EXISTS (
     SELECT 1 FROM TB_PERGUNTA WHERE PERGUNTA = 'Qual banco de dados esta empacotado no docker-compose?'
 );
