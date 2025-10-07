@@ -62,7 +62,17 @@ export default function Login() {
       setOk("Login realizado!");
       setTimeout(() => navigate(next, { replace: true }), 500);
     } catch (e) {
-      const message = e instanceof Error ? e.message : "Não foi possível autenticar via REST.";
+      let message = e instanceof Error ? e.message : "Não foi possível autenticar via REST.";
+      // Se o erro for relacionado a usuário/senha incorretos, mostrar mensagem padronizada
+      if (
+        message?.toLowerCase().includes("usuario") ||
+        message?.toLowerCase().includes("senha") ||
+        message?.toLowerCase().includes("not found") ||
+        message?.toLowerCase().includes("inexistente") ||
+        message?.toLowerCase().includes("incorrect")
+      ) {
+        message = "Usuário e senha incorretos";
+      }
       setErr(message || "Não foi possível autenticar via REST.");
     }
   }

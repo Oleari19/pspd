@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import "./QuizCRUD.css";
 
 const REST_API_BASE = "http://localhost:8089/api";
@@ -226,20 +227,24 @@ export default function QuizCRUD() {
   return (
     <div className="crud-wrap">
       <section className="crud-card">
-        <header className="crud-head">
+        <header className="crud-head" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div>
             <h2 className="crud-title">CRUD de Quiz</h2>
             <p className="crud-subtle">Gerencie questões: criar, editar e excluir</p>
           </div>
-
-          {!editing && (
-            <div className="crud-actions-right">
-              <button className="crud-btn primary" onClick={newEmpty}>+ Nova questão</button>
-              <button className="crud-btn" onClick={load} disabled={loading}>
-                {loading ? "Atualizando (REST)..." : "Atualizar (REST)"}
-              </button>
-            </div>
-          )}
+          <div>
+            <Link to="/quiz" className="crud-btn outline">
+              Voltar
+            </Link>
+            {!editing && (
+              <>
+                <button className="crud-btn primary" onClick={newEmpty}>+ Nova questão</button>
+                <button className="crud-btn" onClick={load} disabled={loading}>
+                  {loading ? "Atualizando (REST)..." : "Atualizar (REST)"}
+                </button>
+              </>
+            )}
+          </div>
         </header>
 
         {!editing && (

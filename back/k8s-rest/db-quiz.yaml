@@ -1,0 +1,29 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata: { name: postgres-quiz-deployment }
+spec:
+  replicas: 1
+  selector: { matchLabels: { app: postgres-quiz } }
+  template:
+    metadata: { labels: { app: postgres-quiz } }
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:16
+          ports: [{ containerPort: 5432 }]
+          env:
+            - { name: POSTGRES_USER, value: "quizuser" }
+            - { name: POSTGRES_PASSWORD, value: "quizpass" }
+            - { name: POSTGRES_DB, value: "dbquiz" }
+          volumeMounts: [{ name: data, mountPath: /var/lib/postgresql/data }]
+          readinessProbe: { exec: { command: ["sh","-c","pg_isready -p 5432"] }, initialDelaySeconds: 5, periodSeconds: 5 }
+          livenessProbe:  { exec: { command: ["sh","-c","pg_isready -p 5432"] }, initialDelaySeconds: 10, periodSeconds: 10 }
+      volumes: [ { name: data, emptyDir: {} } ]
+---
+apiVersion: v1
+kind: Service
+metadata: { name: postgres-quiz-service }
+spec:
+  selector: { app: postgres-quiz }
+  ports: [ { protocol: TCP, port: 5432, targetPort: 5432 } ]
+  type: ClusterIP

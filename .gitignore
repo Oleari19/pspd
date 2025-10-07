@@ -1,3 +1,4 @@
 # Ignorar todos os node_modules em qualquer pasta
 node_modules/
 **/node_modules/
+back/scripts/minikube-linux-amd64
