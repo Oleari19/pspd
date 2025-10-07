@@ -3,6 +3,8 @@ import "./Quiz.css";
 
 const REST_API_BASE = "http://localhost:8089/api";
 const REST_QUIZ_ENDPOINT = `${REST_API_BASE}/pergunta`;
+const REST_USUARIO_ENDPOINT = `${REST_API_BASE}/usuario`;
+const REST_PONTUACAO_ENDPOINT = (id) => `${REST_USUARIO_ENDPOINT}/${id}/pontuacao`;
 
 async function jsonFetch(url, { method = "GET", body, token } = {}) {
   const headers = { "Content-Type": "application/json" };
@@ -47,6 +49,7 @@ export default function Quiz() {
   const [mostrarResposta, setMostrarResposta] = useState(false);
 
   const token = typeof localStorage !== "undefined" ? localStorage.getItem("token") || "" : "";
+  const userId = typeof localStorage !== "undefined" ? localStorage.getItem("userId") || "" : "";
 
   // ===== carregar perguntas do backend (REST) =====
   useEffect(() => {
@@ -107,6 +110,18 @@ export default function Quiz() {
 
     // No REST puro, validamos localmente usando o índice que já veio do backend.
     const correta = selecionada === questao.indiceResposta;
+
+    if (correta && userId) {
+      try {
+        await jsonFetch(REST_PONTUACAO_ENDPOINT(userId), {
+          method: "PATCH",
+          body: { incremento: 1 },
+          token,
+        });
+      } catch (e) {
+        console.warn("Falha ao atualizar pontuacao remota:", e);
+      }
+    }
 
     setRespostas((prev) => [...prev, { idQuestao: questao.id, correta }]);
     setMostrarResposta(true);

@@ -53,6 +53,11 @@ export default function Login() {
       localStorage.setItem("apiMode", "rest");
       localStorage.setItem("basePrefix", REST_API_BASE);
       localStorage.setItem("userName", guessedName);
+      if (user?.codigoUsuario !== undefined && user?.codigoUsuario !== null) {
+        localStorage.setItem("userId", String(user.codigoUsuario));
+      } else {
+        localStorage.removeItem("userId");
+      }
 
       setOk("Login realizado!");
       setTimeout(() => navigate(next, { replace: true }), 500);

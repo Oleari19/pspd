@@ -1,6 +1,7 @@
 package com.example.demo.api.controller;
 
 import com.example.demo.api.dto.LoginRequestDTO;
+import com.example.demo.api.dto.PontuacaoRequestDTO;
 import com.example.demo.api.dto.UsuarioDTO;
 import com.example.demo.api.service.UsuarioService;
 import lombok.RequiredArgsConstructor;
@@ -21,6 +22,11 @@ public class UsuarioController {
     @GetMapping
     public ResponseEntity<List<UsuarioDTO>> listarTodos() {
         return ResponseEntity.ok(usuarioService.listarTodos());
+    }
+
+    @GetMapping("/ranking")
+    public ResponseEntity<List<UsuarioDTO>> listarRanking() {
+        return ResponseEntity.ok(usuarioService.listarRanking());
     }
 
     @GetMapping("/{id}")
@@ -48,6 +54,14 @@ public class UsuarioController {
     public ResponseEntity<UsuarioDTO> atualizar(@PathVariable Integer id,
                                                 @RequestBody UsuarioDTO usuarioDTO) {
         return ResponseEntity.ok(usuarioService.atualizar(id, usuarioDTO));
+    }
+
+
+    @PatchMapping("/{id}/pontuacao")
+    public ResponseEntity<UsuarioDTO> incrementarPontuacao(@PathVariable Integer id,
+                                                           @RequestBody(required = false) PontuacaoRequestDTO request) {
+        int incremento = request != null && request.getIncremento() != null ? request.getIncremento() : 1;
+        return ResponseEntity.ok(usuarioService.incrementarPontuacao(id, incremento));
     }
 
     @DeleteMapping("/{id}")

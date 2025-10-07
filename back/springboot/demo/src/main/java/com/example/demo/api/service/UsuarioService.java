@@ -27,6 +27,23 @@ public class UsuarioService {
     }
 
     @Transactional(readOnly = true)
+    public List<UsuarioDTO> listarRanking() {
+        return usuarioRepository.findAll()
+                .stream()
+                .sorted((a, b) -> Integer.compare(
+                        b.getPontuacao() != null ? b.getPontuacao() : 0,
+                        a.getPontuacao() != null ? a.getPontuacao() : 0))
+                .map(entity -> {
+                    UsuarioDTO dto = mapearParaDTO(entity);
+                    if (dto != null) {
+                        dto.setSenha(null);
+                    }
+                    return dto;
+                })
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
     public UsuarioDTO buscarPorId(Integer id) {
         UsuarioEntity entity = usuarioRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuario nao encontrado"));
@@ -73,6 +90,23 @@ public class UsuarioService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Credenciais invalidas"));
 
         return mapearParaDTO(usuario);
+    }
+
+
+    @Transactional
+    public UsuarioDTO incrementarPontuacao(Integer id, int incremento) {
+        if (incremento <= 0) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Incremento deve ser maior que zero");
+        }
+
+        UsuarioEntity usuario = usuarioRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuario nao encontrado"));
+
+        int atual = usuario.getPontuacao() != null ? usuario.getPontuacao() : 0;
+        usuario.setPontuacao(atual + incremento);
+
+        UsuarioEntity atualizado = usuarioRepository.save(usuario);
+        return mapearParaDTO(atualizado);
     }
 
     private UsuarioDTO mapearParaDTO(UsuarioEntity entity) {

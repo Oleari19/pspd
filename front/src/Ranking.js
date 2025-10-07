@@ -16,19 +16,6 @@ async function jsonFetch(url, { token } = {}) {
   return data;
 }
 
-const DEMO_ROWS = [
-  { user: "Maria", score: 980 },
-  { user: "Gabriel", score: 960 },
-  { user: "Ana", score: 930 },
-  { user: "João", score: 890 },
-  { user: "Carla", score: 870 },
-  { user: "Rafa", score: 850 },
-  { user: "Luiza", score: 830 },
-  { user: "Pedro", score: 820 },
-  { user: "Felipe", score: 810 },
-  { user: "Bianca", score: 800 },
-];
-
 function positionDecor(pos) {
   if (pos === 1) return { icon: "🏆", cls: "gold" };
   if (pos === 2) return { icon: "🥈", cls: "silver" };
@@ -63,6 +50,7 @@ function normalizeRow(r) {
 export default function Ranking() {
   const [rows, setRows] = useState([]);
   const [err, setErr] = useState("");
+  const [loading, setLoading] = useState(true);
 
   const token =
     typeof localStorage !== "undefined" ? localStorage.getItem("token") || "" : "";
@@ -70,15 +58,18 @@ export default function Ranking() {
   useEffect(() => {
     (async () => {
       setErr("");
+      setLoading(true);
       try {
         const data = await jsonFetch(REST_RANKING_ENDPOINT, { token });
         const arr = Array.isArray(data) ? data : data?.items || [];
         const norm = arr.map(normalizeRow);
         setRows(norm);
       } catch (e) {
-        console.warn("Falha ao buscar ranking no backend. Usando DEMO.", e);
-        setErr("Exibindo ranking de demonstração.");
-        setRows(DEMO_ROWS);
+        console.warn("Falha ao buscar ranking no backend.", e);
+        setErr("Nao foi possivel carregar o ranking.");
+        setRows([]);
+      } finally {
+        setLoading(false);
       }
     })();
   }, [token]);
@@ -87,16 +78,28 @@ export default function Ranking() {
     () =>
       [...rows]
         .sort((a, b) => (b.score ?? 0) - (a.score ?? 0))
-        .slice(0, 10)
         .map((r, i) => ({ ...r, pos: i + 1 })),
     [rows]
   );
+
+  if (loading) {
+    return (
+      <div className="rk-wrap">
+        <section className="rk-card">
+          <header className="rk-head">
+            <h2 className="rk-title">Ranking - Geral</h2>
+            <span className="rk-msg">Carregando ranking...</span>
+          </header>
+        </section>
+      </div>
+    );
+  }
 
   return (
     <div className="rk-wrap">
       <section className="rk-card">
         <header className="rk-head">
-          <h2 className="rk-title">Ranking • Top 10</h2>
+          <h2 className="rk-title">Ranking - Geral</h2>
           {err ? <span className="rk-msg err">{err}</span> : null}
         </header>
 
