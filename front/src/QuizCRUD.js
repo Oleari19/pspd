@@ -1,63 +1,45 @@
 import { useEffect, useMemo, useState } from "react";
 import "./QuizCRUD.css";
 
+// As constantes e a função utilitária ficam no escopo global do módulo.
 const REST_PREFIX = "/rest";
 const GRPC_PREFIX = "/grpc";
-
 
 function prefixFor(mode) {
   return mode === "rest" ? REST_PREFIX : GRPC_PREFIX;
 }
+
 async function jsonFetch(url, { method = "GET", body, token } = {}) {
   const headers = { "Content-Type": "application/json" };
   if (token) headers["Authorization"] = `Bearer ${token}`;
   const res = await fetch(url, { method, headers, body: body ? JSON.stringify(body) : undefined });
-  const text = await res.text();
-      async function createItem(payload) {
-        try {
-          const created = await jsonFetch(`${prefixFor(mode)}/quiz`, { method: "POST", body: payload, token });
-          return created?.id ? created : { ...payload, id: Math.max(0, ...items.map(i => i.id||0)) + 1 };
-        } catch {
-          return { ...payload, id: Math.max(0, ...items.map(i => i.id||0)) + 1 };
-        }
-      }
-      
-      async function updateItem(id, payload) {
-        try { await jsonFetch(`${prefixFor(mode)}/quiz/${id}`, { method: "PUT", body: payload, token }); }
-        catch {}
-      }
-      
-      async function removeItem(id) {
-        try { await jsonFetch(`${prefixFor(mode)}/quiz/${id}`, { method: "DELETE", token }); }
-        catch {}
-        finally { setItems(prev => prev.filter(i => i.id !== id)); }
-      }
+  const texto = await res.text();
+  
   let data = null;
-  try { data = text ? JSON.parse(text) : null; } catch { data = { raw: text }; }
-  if (!res.ok) throw new Error(`HTTP ${res.status}: ${text}`);
+  try { data = texto ? JSON.parse(texto) : null; } catch { data = { raw: texto }; }
+  if (!res.ok) throw new Error(`HTTP ${res.status}: ${texto}`);
   return data;
 }
-
 
 const DEMO_DATA = [
   {
     id: 1,
-    text: "O que é gRPC?",
-    options: ["Protocolo de roteamento", "Framework RPC", "Banco de dados", "Balanceador"],
-    correctIndex: 1,
-    explanation: "gRPC é um framework RPC de alto desempenho baseado em HTTP/2 e Protobuf.",
+    texto: "O que é gRPC?",
+    alternativas: ["Protocolo de roteamento", "Framework RPC", "Banco de dados", "Balanceador"],
+    indice_resposta: 1,
+    explicacao: "gRPC é um framework RPC de alto desempenho baseado em HTTP/2 e Protobuf.",
   },
   {
     id: 2,
-    text: "Qual protocolo de transporte o gRPC usa por padrão?",
-    options: ["HTTP/1.1", "WebSocket", "HTTP/2", "FTP"],
-    correctIndex: 2,
-    explanation: "gRPC usa HTTP/2 por padrão.",
+    texto: "Qual protocolo de transporte o gRPC usa por padrão?",
+    alternativas: ["HTTP/1.1", "WebSocket", "HTTP/2", "FTP"],
+    indice_resposta: 2,
+    explicacao: "gRPC usa HTTP/2 por padrão.",
   },
 ];
 
-
-function ModeToggle({ mode, setMode }) {
+// O componente ModeToggle foi simplificado para ter apenas sua responsabilidade.
+/*function ModeToggle({ mode, setMode }) {
   return (
     <div className="crud-toggle">
       <button
@@ -72,33 +54,19 @@ function ModeToggle({ mode, setMode }) {
         className={mode === "grpc" ? "crud-btn active" : "crud-btn"}
         onClick={() => setMode("grpc")}
       >
-              <div style={{ display: 'flex', gap: 12 }}>
-                <Link to="/quiz" className="crud-btn outline">
-                  Voltar
-                </Link>
-                {!editing && (
-                  <>
-                    <button className="crud-btn primary" onClick={newEmpty}>+ Nova questão</button>
-                    <button className="crud-btn" onClick={load} disabled={loading}>
-                      {loading ? "Atualizando (REST)..." : "Atualizar (REST)"}
-                    </button>
-                  </>
-                )}
-              </div>
         gRPC
       </button>
     </div>
   );
-}
-
+}*/
 
 function QuestionForm({ value, onChange, onSubmit, onCancel, submitting, mode }) {
   const v = value;
   function set(field, val) { onChange({ ...v, [field]: val }); }
   function setOption(idx, val) {
-    const opts = [...v.options];
+    const opts = [...v.alternativas];
     opts[idx] = val;
-    onChange({ ...v, options: opts });
+    onChange({ ...v, alternativas: opts });
   }
   return (
     <form className="crud-form" onSubmit={onSubmit}>
@@ -106,8 +74,8 @@ function QuestionForm({ value, onChange, onSubmit, onCancel, submitting, mode })
       <textarea
         className="crud-input"
         rows={3}
-        value={v.text}
-        onChange={(e) => set("text", e.target.value)}
+        value={v.texto}
+        onChange={(e) => set("texto", e.target.value)}
         placeholder="Digite o enunciado da questão"
         required
       />
@@ -117,7 +85,7 @@ function QuestionForm({ value, onChange, onSubmit, onCancel, submitting, mode })
           <label className="crud-label">Alternativa {letra}</label>
           <input
             className="crud-input"
-            value={v.options[i]}
+            value={v.alternativas[i]}
             onChange={(e) => setOption(i, e.target.value)}
             required
           />
@@ -130,23 +98,23 @@ function QuestionForm({ value, onChange, onSubmit, onCancel, submitting, mode })
         type="number"
         min={0}
         max={3}
-        value={v.correctIndex}
-        onChange={(e) => set("correctIndex", Math.max(0, Math.min(3, Number(e.target.value))))}
+        value={v.indice_resposta}
+        onChange={(e) => set("indice_resposta", Math.max(0, Math.min(3, Number(e.target.value))))}
       />
 
       <label className="crud-label">Explicação</label>
       <input
         className="crud-input"
-        value={v.explanation}
-        onChange={(e) => set("explanation", e.target.value)}
+        value={v.explicacao}
+        onChange={(e) => set("explicacao", e.target.value)}
         placeholder="Por que essa alternativa está correta?"
       />
 
       <div className="crud-actions">
         <button className="crud-btn primary" disabled={submitting} type="submit">
           {submitting
-            ? `Salvando (${mode === "rest" ? "REST" : "gRPC"})...`
-            : `Salvar (${mode === "rest" ? "REST" : "gRPC"})`}
+            ? `Salvando...`
+            : `Salvar `}
         </button>
         <button className="crud-btn outline" type="button" onClick={onCancel}>
           Cancelar
@@ -155,7 +123,6 @@ function QuestionForm({ value, onChange, onSubmit, onCancel, submitting, mode })
     </form>
   );
 }
-
 
 export default function QuizCRUD() {
   const [mode, setMode] = useState("grpc");
@@ -167,6 +134,8 @@ export default function QuizCRUD() {
   const [submitting, setSubmitting] = useState(false);
   const token = typeof localStorage !== "undefined" ? localStorage.getItem("token") || "" : "";
 
+  // FUNÇÕES MOVIDAS PARA O ESCOPO DO COMPONENTE
+  // Agora elas têm acesso a `mode`, `token`, `items` e `setItems`.
   async function load() {
     setErr(""); setLoading(true);
     try {
@@ -181,10 +150,15 @@ export default function QuizCRUD() {
 
   async function createItem(payload) {
     try {
-      const created = await jsonFetch(`${prefixFor(mode)}/quiz`, { method: "POST", body: payload, token });
-      return created?.id ? created : { ...payload, id: Math.max(0, ...items.map(i => i.id||0)) + 1 };
+        console.log(payload);
+        const created = await jsonFetch
+        (`${prefixFor(mode)}/quiz`, 
+        { method: "POST", 
+          body: payload, 
+          token });
+        return created?.id ? created : { ...payload, id: Math.max(0, ...items.map(i => i.id || 0)) + 1 };
     } catch {
-      return { ...payload, id: Math.max(0, ...items.map(i => i.id||0)) + 1 };
+        return { ...payload, id: Math.max(0, ...items.map(i => i.id || 0)) + 1 };
     }
   }
 
@@ -205,14 +179,14 @@ export default function QuizCRUD() {
     const query = q.trim().toLowerCase();
     if (!query) return items;
     return items.filter(it =>
-      it.text?.toLowerCase().includes(query) ||
-      it.explanation?.toLowerCase().includes(query) ||
-      (it.options || []).some(o => o?.toLowerCase().includes(query))
+      it.texto?.toLowerCase().includes(query) ||
+      it.explicacao?.toLowerCase().includes(query) ||
+      (it.alternativas || []).some(o => o?.toLowerCase().includes(query))
     );
   }, [items, q]);
 
   function newEmpty() {
-    setEditing({ id: null, text: "", options: ["", "", "", ""], correctIndex: 0, explanation: "" });
+    setEditing({ id: null, texto: "", alternativas: ["", "", "", ""], indice_resposta: 0, explicacao: "" });
   }
 
   async function submitForm(e) {
@@ -241,12 +215,12 @@ export default function QuizCRUD() {
 
           {!editing && (
             <div className="crud-actions-right">
-              <ModeToggle mode={mode} setMode={setMode} />
+              
               <button className="crud-btn primary" onClick={newEmpty}>+ Nova questão</button>
               <button className="crud-btn" onClick={load} disabled={loading}>
                 {loading
-                  ? `Atualizando (${mode === "rest" ? "REST" : "gRPC"})...`
-                  : `Atualizar (${mode === "rest" ? "REST" : "gRPC"})`}
+                  ? `Atualizando ...`
+                  : `Atualizar`}
               </button>
             </div>
           )}
@@ -293,18 +267,18 @@ export default function QuizCRUD() {
                     <tr key={it.id}>
                       <td>{it.id}</td>
                       <td>
-                        <div className="q-text">{it.text}</div>
+                        <div className="q-text">{it.texto}</div>
                         <div className="q-options">
-                          {it.options?.map((op, idx) => (
-                            <span key={idx} className={`q-badge ${idx === it.correctIndex ? "ok" : ""}`}>
+                          {it.alternativas?.map((op, idx) => (
+                            <span key={idx} className={`q-badge ${idx === it.indice_resposta ? "ok" : ""}`}>
                               {String.fromCharCode(65 + idx)}. {op}
                             </span>
                           ))}
                         </div>
                       </td>
                       <td>
-                        {typeof it.correctIndex === "number"
-                          ? `Índice ${it.correctIndex} (${String.fromCharCode(65 + it.correctIndex)})`
+                        {typeof it.indice_resposta === "number"
+                          ? `Índice ${it.indice_resposta} (${String.fromCharCode(65 + it.indice_resposta)})`
                           : "-"}
                       </td>
                       <td>
@@ -325,3 +299,5 @@ export default function QuizCRUD() {
     </div>
   );
 }
+
+// A CHAVE EXTRA NO FINAL FOI REMOVIDA

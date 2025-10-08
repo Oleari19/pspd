@@ -75,7 +75,7 @@ export default function Login() {
         
         <div className="btn-row">
           <button className="btn-login" type="button" onClick={() => doLogin()}>
-            Entrar com gRPC
+            Entrar
           </button>
         </div>
 

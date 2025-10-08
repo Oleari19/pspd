@@ -46,11 +46,11 @@ message GetPerguntasResponse {
 }
 
 message CreateRequest {
-  repeated Pergunta pergunta_criar = 1;
+  repeated Pergunta perguntaCriar = 1;
 }
 
 message CreateResponse {
-  repeated Pergunta pergunta_criada = 1;
+  repeated Pergunta perguntaCriada = 1;
 }
 `;
 
@@ -135,21 +135,22 @@ const quizClient = new quizProto.Quiz(GRPC_ADDR, grpc.credentials.createInsecure
 function toGrpcPergunta(frontItem) {
   return {
     id: Number(frontItem.id || 0),
-    texto: frontItem.text || "",
-    alternativas: Array.isArray(frontItem.options) ? frontItem.options : [],
-    indice_resposta: Number(frontItem.correctIndex ?? 0),
-    explicacao: frontItem.explanation || "",
+    texto: frontItem.texto || "",
+    alternativas: Array.isArray(frontItem.alternativas) ? frontItem.alternativas : [],
+    indiceResposta: Number(frontItem.indice_resposta ?? frontItem.indiceResposta ?? 0),
+    explicacao: frontItem.explicacao || "",
   };
 }
+
 
 // gRPC (Pergunta) -> Front (React)
 function toFrontItem(p) {
   return {
     id: Number(p.id),
-    text: p.texto,
-    options: p.alternativas,
-    correctIndex: Number(p.indiceResposta),
-    explanation: p.explicacao || "",
+    texto: p.texto,
+    alternativas: p.alternativas,
+    indice_resposta: Number(p.indiceResposta),
+    explicacao: p.explicacao || "",
   };
 }
 
@@ -286,13 +287,13 @@ app.post("/grpc/quiz", (req, res) => {
   const body = req.body || {};
   const p = toGrpcPergunta(body);
 
-  const createReq = { pergunta_criar: [p] };
+  const createReq = { perguntaCriar: [p] };
   quizClient.CreatePergunta(createReq, (err, reply) => {
     if (err) {
       console.error("CreatePergunta error:", err);
       return res.status(502).json({ error: err.details || String(err) });
     }
-    const created = (reply?.pergunta_criada || [])[0];
+    const created = (reply?.perguntaCriada || [])[0];
     if (!created) {
       return res.json({ ...body, id: 0 });
     }
