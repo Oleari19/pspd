@@ -1,4 +1,12 @@
 # Ignorar todos os node_modules em qualquer pasta
 node_modules/
 **/node_modules/
+
+# Ignorar ambientes virtuais Python
+venv/
+.venv/
+**/venv/
+**/.venv/
+
+# Ignorar binário do minikube
 back/scripts/minikube-linux-amd64
