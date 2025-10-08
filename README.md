@@ -1,135 +1,78 @@
-PSPD — Quiz (Spring Boot + React + PostgreSQL)
+PSPD – Quiz (Monorepo: Back + Front)
 
-Este repositório contém:
-- Backend REST em Spring Boot (Java 17) com PostgreSQL.
-- Frontend em React (Create React App).
-- Docker Compose para ambiente local (API + Postgres + Adminer).
-- Manifests Kubernetes + um Gateway (Node/Express) para orquestração em cluster.
-
-Use este README como guia para rodar localmente, com Docker Compose ou via Minikube/Kubernetes, além de entender as branches do projeto.
+Stack: Spring Boot + PostgreSQL + React, com Docker Compose e manifests para Kubernetes.
 
 Requisitos
-- Java 17 + Maven 3.9+
+- Docker + Docker Compose (recomendado para ambiente local)
 - Node.js 18+ (npm)
-- Docker + Docker Compose (opcional, recomendado para local)
-- Kubectl + Minikube (opcional, para rodar em cluster local)
+- Opcional: Java 17 + Maven 3.9+ (se quiser rodar o back sem Docker)
 
-Estrutura
-- `back/springboot/demo` — API Spring Boot (porta padrão `8089`)
-- `back/docker-compose.yml` — Compose com `db` (Postgres), `api` (Spring) e `adminer`
-- `back/gateway-p-rest` — Gateway P (Node/Express) para Kubernetes
-- `back/k8s-rest` — Manifests K8s para bancos, serviços e gateway
-- `front` — Aplicação React (porta `3000` em dev)
+Rodar Rápido (recomendado)
 
-Como Rodar — Backend (Spring Boot)
+1) Subir Banco + API com Docker Compose
 
-Opção A: Maven local (com Postgres local ou do Compose)
-- Banco local: configure variáveis ou use o serviço `db` do Compose (ver Opção B) e aponte para ele.
-- Variáveis suportadas (defaults):
-  - `PGHOST`/`DB_HOST`=`localhost`, `PGPORT`/`DB_PORT`=`5432`, `PGDATABASE`/`DB_NAME`=`dbspringboot`, `PGUSER`/`DB_USER`=`postgres`, `PGPASSWORD`/`DB_PASS`=`postgres`
-- Executar:
-  - `cd back/springboot/demo`
-  - `mvn spring-boot:run`
-- Porta: `http://localhost:8089`
+```bash
+cd back
+docker compose up -d
+```
 
-Opção B: Docker Compose (recomendado)
-- `cd back`
-- `docker compose up -d`
-- Serviços:
-  - API: `http://localhost:8089`
-  - Adminer (UI para DB): `http://localhost:8080` (servidor: `db`, user: `postgres`, pass: `postgres`, db: `dbspringboot`)
-- O Compose injeta `schema.sql` e `data.sql` automaticamente no Postgres.
+Serviços expostos:
+- API: http://localhost:8089
+- Adminer (UI do banco): http://localhost:8080
+  - servidor: db | usuário: postgres | senha: postgres | database: dbspringboot
 
-Como Rodar — Frontend (React)
-- `cd front`
-- `npm install`
-- `npm start`
-- Por padrão, o front usa `http://localhost:8089/api` (constantes `REST_API_BASE` nos arquivos do `src`).
-- Se for usar Kubernetes/Gateway, ajuste `REST_API_BASE` para o endpoint do gateway (ex.: `http://<minikube-ip>:<nodeport>/api`). Arquivos a ajustar:
-  - `front/src/Login.js`
-  - `front/src/Cadastro.js`
-  - `front/src/Quiz.js`
-  - `front/src/Ranking.js`
-  - `front/src/QuizCRUD.js`
+2) Rodar o Front (React)
 
-Rodando no Kubernetes (Minikube)
-1) Inicie o cluster
-- `minikube start`
-- Opcional: `eval $(minikube docker-env)` para construir imagens dentro do daemon do Minikube.
+```bash
+cd front
+npm install
+npm start
+```
 
-2) Construa as imagens locais (no diretório `back`)
-- Linux/macOS (ou Git Bash no Windows):
-  - `bash scripts/build-images-rest.sh`
-  - Isso cria: `rest-quiz:v1`, `rest-user:v1` (tag da mesma imagem) e `gateway-p-rest:v1`
+Aplicação Web: http://localhost:3000
 
-3) Aplique os manifests
-- `kubectl apply -f k8s-rest/`
-- Verifique: `kubectl get pods,svc`
+Parar os serviços do Docker Compose
 
-4) Descubra a URL do gateway (NodePort)
-- `minikube service gateway-p-rest-service --url`
-- ou pegue o IP do Minikube (`minikube ip`) e o NodePort do serviço (`kubectl get svc gateway-p-rest-service -o wide`).
-- Teste:
-  - `curl http://<minikube-ip>:<nodeport>/healthz`
-  - `curl http://<minikube-ip>:<nodeport>/api/quiz/summary`
+```bash
+cd back
+docker compose down
+```
 
-5) Aponte o Front para o Gateway
-- Ajuste `REST_API_BASE` no front para `http://<minikube-ip>:<nodeport>/api` e rode `npm start`.
+Alternativa: Backend sem Docker (opcional)
+- Requer um PostgreSQL local acessível em localhost:5432 com:
+  - usuário: postgres | senha: postgres | database: dbspringboot
+- O backend já usa essas credenciais por padrão.
 
-Observações
-- As imagens `rest-quiz` e `rest-user` usam a mesma aplicação Spring Boot; os manifests diferenciam bancos/serviços para simular dois domínios (quiz e usuário).
-- As probes/saúde já estão definidas nos manifests; se trocar de HTTP para TCP, remova e recrie as probes (veja comentários em `back/scripts/k8s-rest.sh`).
+```bash
+cd back/springboot/demo
+mvn spring-boot:run
+```
 
-Endpoints REST (principais)
-- Usuário (`/api/usuario`)
-  - `GET /api/usuario` — lista usuários
-  - `GET /api/usuario/ranking` — ranking por pontuação
-  - `GET /api/usuario/{id}` — busca por id
-  - `POST /api/usuario` — cria usuário
-  - `POST /api/usuario/login` — autentica (email/senha)
-  - `PUT /api/usuario/{id}` — atualiza
-  - `PATCH /api/usuario/{id}/pontuacao` — incrementa pontuação (ex: `{ "incremento": 10 }`)
-  - `DELETE /api/usuario/{id}` — remove
-- Pergunta (`/api/pergunta`)
-  - `GET /api/pergunta` — lista perguntas
-  - `GET /api/pergunta/{id}` — busca por id
-  - `POST /api/pergunta` — cria
-  - `PUT /api/pergunta/{id}` — atualiza
-  - `DELETE /api/pergunta/{id}` — remove
+URLs úteis
+- API base: http://localhost:8089/api
+- Adminer: http://localhost:8080
+- Frontend: http://localhost:3000
 
-Banco de Dados
-- Arquivos: `back/springboot/demo/src/main/resources/schema.sql` e `data.sql`.
-- Spring configura Postgres via envs (`PG*`/`DB_*`); `ddl-auto=update` e `spring.sql.init.mode=always` garantem criação e carga inicial.
-- Pool reduzido (Hikari) para ambientes com pouca RAM.
-- Com Docker Compose, o Adminer em `:8080` facilita a inspeção.
+Estrutura do Repositório
+- back/springboot/demo – API Spring Boot
+- back/docker-compose.yml – Compose (db, api, adminer)
+- back/k8s-rest – Manifests para Kubernetes (opcional)
+- front – Aplicação React
 
-Branches — Visão Geral
-- `main` (padrão):
-  - Implementação atual em REST (Spring Boot) + React, com suporte a Docker Compose e Kubernetes (gateway P em Node para orquestração de rotas `/api/usuario` e `/api/pergunta`).
-  - Recomendado para uso e evolução.
-- `grpc` (histórico):
-  - Versão anterior com servidor gRPC (C++) e um proxy REST em Node. Mantida apenas para referência/estudo.
-- `serverA`, `serverB`, `serverBfinalVersion` (históricas):
-  - Ramificações de experimentos/protótipos antigos. Podem conter variações de servidor e pipeline. Não são mantidas ativamente.
+Kubernetes (opcional, bem resumido)
 
-Como trocar de branch
-- `git checkout <nome-da-branch>`
-- `git pull` para atualizar a branch selecionada
+```bash
+minikube start
+cd back
+bash scripts/build-images-rest.sh
+kubectl apply -f k8s-rest/
+minikube service gateway-p-rest-service --url
+```
 
-Quando usar cada branch
-- Use `main` para desenvolvimento atual, testes e entrega.
-- Use `grpc`/`serverA`/`serverB*` apenas para consulta ou migração de ideias do design antigo.
+Em seguida, aponte o front para o endpoint retornado (se necessário), ou ajuste o `REST_API_BASE` nos arquivos do `front/src`.
 
-Dicas e Solução de Problemas
-- API fora do ar / `connection refused`:
-  - Verifique Postgres (Compose: `docker compose ps`), aguarde o healthcheck.
-- Front não acessa a API:
-  - Confirme `REST_API_BASE` e a porta (local: `8089`; K8s: Gateway NodePort).
-- CORS em desenvolvimento:
-  - CORS liberado para `localhost` e `127.0.0.1` no backend.
-- Build do backend falha:
-  - Confirme Java 17 e Maven 3.9+.
-- Windows:
-  - Use Git Bash para rodar scripts `.sh` em `back/scripts`. Em PowerShell, traduza os passos manualmente.
-
+Solução Rápida de Problemas
+- API não sobe: aguarde o healthcheck do Postgres (docker compose logs -f db).
+- Front não acessa API: confirme que a API está em http://localhost:8089 e que `REST_API_BASE` dos arquivos do front aponta para `http://localhost:8089/api`.
+- Build do back falha: confirme Java 17 e Maven 3.9+ (apenas no modo sem Docker).
 
