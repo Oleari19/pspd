@@ -73,6 +73,7 @@ export default function Quiz() {
               explicacao: q.explanation || q.explicacao || "",
             }))
           : [];
+          console.log(data)
         setQuestoes(formatado);
       } catch (e) {
         console.error("Erro ao carregar questões:", e);
@@ -117,7 +118,7 @@ export default function Quiz() {
       // if (typeof result?.correct === "boolean") correta = result.correct;
       // if (result?.explanation) questao.explicacao = result.explanation;
       console.log("clicado");
-      await fetch(`http://localhost:6969/grpc/user/score`, { method: "POST",
+      await fetch(`/grpc/user/score`, { method: "POST",
         headers: 
         { "Content-Type": "application/json" },
          body: JSON.stringify({ scorenew: correta ? 10 : 0,

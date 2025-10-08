@@ -32,7 +32,8 @@ export default function Cadastro() {
 
   async function doRegister() {
     if(passReg === passReg2){
-    fetch("http://localhost:6969/grpc/user", {
+      console.log("oi");
+    fetch("/grpc/user", {
   method: "POST",
   headers: { "Content-Type": "application/json" },
   body: JSON.stringify({

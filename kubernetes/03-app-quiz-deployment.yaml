@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: grpc-quiz-container
-        image: grpc-servidor-quiz:v1 # O nome que daremos à imagem Docker
+        image: grpc-quiz:v1 # O nome que daremos à imagem Docker
         imagePullPolicy: IfNotPresent # Força o K8s a usar a imagem local do Minikube
         ports:
         - containerPort: 4242

@@ -22,7 +22,7 @@ RUN make
 FROM fedora:40
 
 # Instala apenas as bibliotecas de execução
-RUN dnf install -y grpc libpqxx && dnf clean all
+RUN dnf install -y grpc-cpp libpqxx && dnf clean all
 
 WORKDIR /app
 

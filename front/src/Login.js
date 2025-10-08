@@ -16,7 +16,7 @@ export default function Login() {
   const next = location.state?.from?.pathname || "/quiz";
 
   function doLogin(mode) {
-    fetch("http://localhost:6969/grpc/login", {
+    fetch("/grpc/login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({

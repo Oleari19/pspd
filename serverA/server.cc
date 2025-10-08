@@ -28,10 +28,10 @@ class QuizServiceImpl final : public Quiz::Service {
 		pqxx::connection conn("dbname=meubanco user=meuusuario password=minhasenha host=postgres-quiz-service port=5433");
 
 		if (!conn.is_open()) {
-			std::cerr << "Não foi possível conectar ao banco!\n";
+			std::cerr << "Não foi possível conectar ao banco!" << std::endl;
 			return Status::CANCELLED;
 		}
-		std::cout << "Conectado ao banco com sucesso!\n";
+		std::cout << "Conectado ao banco com sucesso!" << std::endl;
 
 		pqxx::work txn(conn);
 		std::ostringstream sql;
@@ -42,20 +42,20 @@ class QuizServiceImpl final : public Quiz::Service {
 		
 		response->set_statusret(0);
 
-		std::cout << "pergunta deletada com sucesso\n";
+		std::cout << "pergunta deletada com sucesso" << std::endl;
 
 
 		return Status::OK;
 	}
 	Status GetPerguntas(ServerContext* context, const GetPerguntasRequest* request, GetPerguntasResponse* response) override {
-		std::cout << "Recebida requisição para GetPerguntas" << "\n";
-		pqxx::connection conn("dbname=meubanco user=meuusuario password=minhasenha host=127.0.0.1 port=5433");
+		std::cout << "Recebida requisição para GetPerguntas" << std::endl;
+		pqxx::connection conn("dbname=meubanco user=meuusuario password=minhasenha host=postgres-quiz-service port=5433");
 
 		if (!conn.is_open()) {
-			std::cerr << "Não foi possível conectar ao banco!\n";
+			std::cerr << "Não foi possível conectar ao banco!" << std::endl;
 			return Status::CANCELLED;
 		}
-		std::cout << "Conectado ao banco com sucesso!\n";
+		std::cout << "Conectado ao banco com sucesso!" << std::endl;
 
 		pqxx::work txn(conn);
 		std::string sql = R"(
@@ -111,20 +111,20 @@ class QuizServiceImpl final : public Quiz::Service {
 	}
 
 		Status CreatePergunta(ServerContext* context, const CreateRequest* request, CreateResponse* response) override {
-		std::cout << "Criação de dados acionada\n";
+		std::cout << "Criação de dados acionada" << std::endl;
 
 		// Validação para garantir que há perguntas na requisição
 		if (request->pergunta_criar_size() == 0) {
-			std::cerr << "Nenhuma pergunta recebida para criação!\n";
+			std::cerr << "Nenhuma pergunta recebida para criação!" << std::endl;
 			return Status(grpc::INVALID_ARGUMENT, "A requisição para criar pergunta está vazia.");
 		}
 
-		pqxx::connection conn("dbname=meubanco user=meuusuario password=minhasenha host=127.0.0.1 port=5433");
+		pqxx::connection conn("dbname=meubanco user=meuusuario password=minhasenha host=postgres-quiz-service port=5433");
 		if (!conn.is_open()) {
-			std::cerr << "Não foi possível conectar ao banco!\n";
+			std::cerr << "Não foi possível conectar ao banco!" << std::endl;
 			return Status(grpc::UNAVAILABLE, "Falha na conexão com o banco de dados.");
 		}
-		std::cout << "Conectado ao banco com sucesso!\n";
+		std::cout << "Conectado ao banco com sucesso!" << std::endl;
 
 		// Inicia uma transação. Se algo der errado, o pqxx::work fará o rollback automaticamente.
 		pqxx::work txn(conn);
@@ -156,7 +156,7 @@ class QuizServiceImpl final : public Quiz::Service {
 
 			// Se tudo correu bem até aqui, efetiva as mudanças no banco de dados
 			txn.commit();
-			std::cout << "Pergunta e alternativas inseridas com sucesso. ID=" << new_quiz_id << "\n";
+			std::cout << "Pergunta e alternativas inseridas com sucesso. ID=" << new_quiz_id << std::endl;
 
 			// Passo 3: Montar a resposta para o cliente com os dados criados
 			auto* nova = response->add_pergunta_criada();
@@ -188,7 +188,7 @@ void RunServer() {
     builder.RegisterService(&service);
 
     std::unique_ptr<Server> server(builder.BuildAndStart());
-    std::cout << "Servidor escutando em " << server_address << "\n";
+    std::cout << "Servidor escutando em " << server_address << std::endl;
     server->Wait();
 }
 

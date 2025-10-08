@@ -32,7 +32,7 @@ export default function Ranking() {
   const [rows, setRows] = useState([]);
 
   useEffect(() => {
-    fetch("http://localhost:6969/grpc/ranking", {
+    fetch("/grpc/ranking", {
       method: "GET",
       headers: { "Content-Type": "application/json" },
     })

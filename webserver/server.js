@@ -3,42 +3,134 @@ const express = require("express");
 const cors = require("cors");
 const grpc = require("@grpc/grpc-js");
 const protoLoader = require("@grpc/proto-loader");
+const protobuf = require('protobufjs');
+
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
 
-const QUIZ_PROTO_PATH = path.join(__dirname, "..", "serverA", "quiz.proto");
-const USER_PROTO_PATH = path.join(__dirname, "..", "serverB", "user.proto");
-// servidor C++ está escutando em 0.0.0.0:4242
-const GRPC_ADDR = process.env.GRPC_ADDR || "localhost:4242";
-const GRPCB_ADDR = "localhost:5050";
+const QUIZ_PROTO_INLINE = `
+syntax = "proto3";
 
-const packageDefinitionB = protoLoader.loadSync(USER_PROTO_PATH, {
-    keepCase: true,
-    longs: String,
-    enums: String,
-    defaults: true,
-    oneofs: true,
-});
+package quiz;
 
-const userProto = grpc.loadPackageDefinition(packageDefinitionB).user;
+service Quiz {
+  rpc GetPerguntas (GetPerguntasRequest) returns (GetPerguntasResponse) {}
+  rpc CreatePergunta (CreateRequest) returns (CreateResponse) {}
+  rpc DeletePergunta (PerguntaId) returns (StatusRetorno) {}
+}
+
+message PerguntaId {
+  int32 dbid = 1;
+}
+
+message StatusRetorno {
+  int32 statusRet = 1;
+}
+
+message Pergunta {
+  int32 id = 1;
+  string texto = 2;
+  repeated string alternativas = 3;
+  int32 indice_resposta = 4;
+  string explicacao = 5;
+}
+
+message GetPerguntasRequest {
+}
+
+message GetPerguntasResponse {
+  repeated Pergunta perguntas = 1;
+}
+
+message CreateRequest {
+  repeated Pergunta pergunta_criar = 1;
+}
+
+message CreateResponse {
+  repeated Pergunta pergunta_criada = 1;
+}
+`;
+
+const USER_PROTO_INLINE = `
+syntax = "proto3";
+
+package user;
+
+service User {
+  rpc CreateUsuario(CreateUserRequest) returns (CreateUserResponse){}
+  rpc UpdateScore(ScoreRequest) returns (ScoreResponse){}
+  rpc Login(LoginRequest) returns (LoginResponse){}
+  rpc ListByScore(ListRequest) returns(ListResponse){}
+}
+
+message LoginRequest {
+  string loginreq = 1;
+  string senhareq = 2;
+}
+
+message ListResponse {
+  repeated Usuario users = 1;
+}
+
+message LoginResponse {
+  string tokenrem = 1;
+}
+
+message Usuario {
+  string nome = 1;
+  string login = 2;
+  string rememberToken = 3;
+  string senha = 4;
+  int32 score = 5;
+}
+
+message CreateUserRequest {
+  Usuario usuario = 1;
+}
+
+message CreateUserResponse {
+  string rememberTokenRes = 1;
+}
+
+message ScoreRequest {
+  int32 scorenew = 1;
+  string remembertok = 2;
+}
+
+message ScoreResponse {
+}
+
+message ListRequest {
+}
+`;
+
+// --- Dynamic loading from inline strings ---
+
+// Helper function to load proto from a string
+function loadProtoFromString(protoString) {
+    const parsed = protobuf.parse(protoString);
+    const jsonDescriptor = parsed.root.toJSON();
+    const packageDefinition = protoLoader.fromJSON(jsonDescriptor);
+    return grpc.loadPackageDefinition(packageDefinition);
+}
+
+const userProto = loadProtoFromString(USER_PROTO_INLINE).user;
+const quizProto = loadProtoFromString(QUIZ_PROTO_INLINE).quiz;
+
+
+// --- gRPC Client Setup ---
+
+const GRPC_ADDR = process.env.GRPC_ADDR || "grpc-quiz-service:4242";
+const GRPCB_ADDR = "grpc-user-service:5050";
 
 const clientB = new userProto.User(GRPCB_ADDR, grpc.credentials.createInsecure());
-
-
-const packageDefinition = protoLoader.loadSync(QUIZ_PROTO_PATH, {
-  keepCase: true,      // mantém nomes como estão no .proto
-  longs: String,
-  enums: String,
-  defaults: true,
-  oneofs: true,
-});
-const quizProto = grpc.loadPackageDefinition(packageDefinition).quiz;
-
 const quizClient = new quizProto.Quiz(GRPC_ADDR, grpc.credentials.createInsecure());
 
+
+// --- Business Logic and Express Routes (your original code, unchanged) ---
 // Front (React) -> gRPC (Pergunta)
 function toGrpcPergunta(frontItem) {
   return {
@@ -56,7 +148,7 @@ function toFrontItem(p) {
     id: Number(p.id),
     text: p.texto,
     options: p.alternativas,
-    correctIndex: Number(p.indice_resposta),
+    correctIndex: Number(p.indiceResposta),
     explanation: p.explicacao || "",
   };
 }
