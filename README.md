@@ -132,7 +132,4 @@ Dicas e Solução de Problemas
 - Windows:
   - Use Git Bash para rodar scripts `.sh` em `back/scripts`. Em PowerShell, traduza os passos manualmente.
 
----
-
-Se quiser, eu centralizo a URL do backend no front via `.env` (ex.: `REACT_APP_API_BASE`) e removo as constantes espalhadas. Basta pedir que eu aplico.
 
