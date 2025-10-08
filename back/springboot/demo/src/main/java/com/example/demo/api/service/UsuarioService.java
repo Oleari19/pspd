@@ -95,10 +95,6 @@ public class UsuarioService {
 
     @Transactional
     public UsuarioDTO incrementarPontuacao(Integer id, int incremento) {
-        if (incremento <= 0) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Incremento deve ser maior que zero");
-        }
-
         UsuarioEntity usuario = usuarioRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuario nao encontrado"));
 
