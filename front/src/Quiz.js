@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { Link } from "react-router-dom";
 import "./Quiz.css";
 import { useCookies } from "react-cookie";
 
@@ -97,7 +98,9 @@ export default function Quiz() {
   const total = questoes.length;
   const questao = questoes[etapa];
   const progresso = total > 0 ? Math.round((etapa / total) * 100) : 0;
-  const pontuacao = respostas.filter((r) => r.correta).length;
+  const acertos = respostas.filter((r) => r.correta).length;
+  const erros = respostas.filter((r) => !r.correta).length;
+  const pontuacaoTotal = acertos * 10 + erros * -6;
 
   async function validarNoBackend(questionId, answerText) {
     const url = `${base(prefix)}/quiz/${questionId}/validate`;
@@ -121,7 +124,7 @@ export default function Quiz() {
       await fetch(`/grpc/user/score`, { method: "POST",
         headers: 
         { "Content-Type": "application/json" },
-         body: JSON.stringify({ scorenew: correta ? 10 : 0,
+         body: JSON.stringify({ scorenew: correta ? 10 : -6,
           remembertok: cookies.token }) });
 
     } catch {}
@@ -177,7 +180,8 @@ export default function Quiz() {
         <section className="cartao-inicial">
           <h1 className="titulo-cartao">Resultado</h1>
           <p className="progresso-cartao">
-            Você acertou <b>{pontuacao}</b> de <b>{total}</b> perguntas 🎉
+            Você acertou <b>{acertos}</b> de <b>{total}</b> perguntas 🎉<br />
+            Pontuação final: <b>{pontuacaoTotal}</b>
           </p>
           <button className="btn-reiniciar" onClick={Reiniciar}>
             Refazer quiz
@@ -190,11 +194,16 @@ export default function Quiz() {
   return (
     <main className="tela">
       <section className="cartao">
-        <header className="quiz-head">
-          <div className="quiz-step">
-            <strong>Pergunta {etapa + 1}</strong> / {total}
+        <header className="quiz-head" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div>
+            <div className="quiz-step">
+              <strong>Pergunta {etapa + 1}</strong> / {total}
+            </div>
+            <div className="progresso-quiz">{progresso}% concluído</div>
           </div>
-          <div className="progresso-quiz">{progresso}% concluído</div>
+          <Link to="/quizcrud" className="btn-banco-questoes" style={{ marginLeft: 'auto', textDecoration: 'none', padding: '8px 16px', background: '#fff', color: '#222', borderRadius: 6, fontWeight: 500 }}>
+            Banco de questões
+          </Link>
         </header>
 
         <h2 className="questao-quiz">{questao.texto}</h2>

@@ -13,6 +13,25 @@ async function jsonFetch(url, { method = "GET", body, token } = {}) {
   if (token) headers["Authorization"] = `Bearer ${token}`;
   const res = await fetch(url, { method, headers, body: body ? JSON.stringify(body) : undefined });
   const text = await res.text();
+      async function createItem(payload) {
+        try {
+          const created = await jsonFetch(`${prefixFor(mode)}/quiz`, { method: "POST", body: payload, token });
+          return created?.id ? created : { ...payload, id: Math.max(0, ...items.map(i => i.id||0)) + 1 };
+        } catch {
+          return { ...payload, id: Math.max(0, ...items.map(i => i.id||0)) + 1 };
+        }
+      }
+      
+      async function updateItem(id, payload) {
+        try { await jsonFetch(`${prefixFor(mode)}/quiz/${id}`, { method: "PUT", body: payload, token }); }
+        catch {}
+      }
+      
+      async function removeItem(id) {
+        try { await jsonFetch(`${prefixFor(mode)}/quiz/${id}`, { method: "DELETE", token }); }
+        catch {}
+        finally { setItems(prev => prev.filter(i => i.id !== id)); }
+      }
   let data = null;
   try { data = text ? JSON.parse(text) : null; } catch { data = { raw: text }; }
   if (!res.ok) throw new Error(`HTTP ${res.status}: ${text}`);
@@ -53,6 +72,19 @@ function ModeToggle({ mode, setMode }) {
         className={mode === "grpc" ? "crud-btn active" : "crud-btn"}
         onClick={() => setMode("grpc")}
       >
+              <div style={{ display: 'flex', gap: 12 }}>
+                <Link to="/quiz" className="crud-btn outline">
+                  Voltar
+                </Link>
+                {!editing && (
+                  <>
+                    <button className="crud-btn primary" onClick={newEmpty}>+ Nova questão</button>
+                    <button className="crud-btn" onClick={load} disabled={loading}>
+                      {loading ? "Atualizando (REST)..." : "Atualizar (REST)"}
+                    </button>
+                  </>
+                )}
+              </div>
         gRPC
       </button>
     </div>

@@ -53,6 +53,12 @@
 .crud-btn.active { box-shadow: 0 0 0 2px #0002; }
 .crud-btn:active { transform: scale(0.97); }
 
+.crud-btn.outline {
+  background: #fff;
+  text-decoration: none;
+  font-size: 14px;
+}
+
 .crud-searchbar {
   margin: 14px 0;
 }

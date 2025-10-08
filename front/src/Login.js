@@ -35,6 +35,10 @@ export default function Login() {
         try {
           const json = JSON.parse(data);
           console.log("JSON parseado:", json);
+          if (!json.tokenrem || json.tokenrem === "" || json.tokenrem === null) {
+            setErr("Email e senha incorretos");
+            return;
+          }
           setToken(json.tokenrem || "");
           setCookie('token', json.tokenrem, { path: '/' });
         }catch{
