@@ -26,11 +26,7 @@ spec:
         image: postgres:15
         ports:
         - containerPort: 5433
-        args:
-          - "-c"
-          - "listen_addresses=*"
-          - "-c"
-          - "port=5433"
+        args: ["-c","listen_addresses=*","-c","port=5433"]
         env:
         - name: POSTGRES_USER
           value: "meuusuario"
@@ -48,9 +44,15 @@ spec:
         volumeMounts:
         - name: postgres-quiz-storage
           mountPath: /var/lib/postgresql/data
+        - name: quiz-init-sql
+          mountPath: /docker-entrypoint-initdb.d
+          readOnly: true
       volumes:
       - name: postgres-quiz-storage
         emptyDir: {}
+      - name: quiz-init-sql
+        configMap:
+          name: quiz-sql-config
 ---
 apiVersion: v1
 kind: Service
@@ -61,7 +63,7 @@ spec:
   selector:
     app: postgres-quiz
   ports:
-    - protocol: TCP
-      port: 5433
-      targetPort: 5433
-      nodePort: 30555
+  - protocol: TCP
+    port: 5433
+    targetPort: 5433
+    nodePort: 30555

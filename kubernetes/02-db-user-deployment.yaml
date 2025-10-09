@@ -26,11 +26,7 @@ spec:
         image: postgres:15
         ports:
         - containerPort: 5434
-        args:
-          - "-c"
-          - "listen_addresses=*"
-          - "-c"
-          - "port=5434"
+        args: ["-c","listen_addresses=*","-c","port=5434"]
         env:
         - name: POSTGRES_USER
           value: "postgres"
@@ -48,9 +44,15 @@ spec:
         volumeMounts:
         - name: postgres-user-storage
           mountPath: /var/lib/postgresql/data
+        - name: user-init-sql
+          mountPath: /docker-entrypoint-initdb.d
+          readOnly: true
       volumes:
       - name: postgres-user-storage
         emptyDir: {}
+      - name: user-init-sql
+        configMap:
+          name: user-sql-config
 ---
 apiVersion: v1
 kind: Service
@@ -61,7 +63,7 @@ spec:
   selector:
     app: postgres-user
   ports:
-    - protocol: TCP
-      port: 5434
-      targetPort: 5434
-      nodePort: 30434
+  - protocol: TCP
+    port: 5434
+    targetPort: 5434
+    nodePort: 30434

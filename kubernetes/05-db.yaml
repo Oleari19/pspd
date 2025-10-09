@@ -1,0 +1,206 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: quiz-sql-config
+data:
+  01_quiz.sql: |
+    CREATE TABLE IF NOT EXISTS quiz (
+      id SERIAL PRIMARY KEY,
+      texto VARCHAR(255) NOT NULL,
+      indiceResposta INTEGER,
+      explicacao VARCHAR(255)
+    );
+
+    CREATE TABLE IF NOT EXISTS alternativas (
+      quiz_id INTEGER NOT NULL,
+      alternativa VARCHAR(255) NOT NULL,
+      CONSTRAINT fk_quiz
+        FOREIGN KEY (quiz_id)
+        REFERENCES quiz(id)
+        ON DELETE CASCADE
+    );
+
+    -- Insere a pergunta e alternativas usando CTE para pegar o id
+    WITH q AS (
+      INSERT INTO quiz (texto, indiceResposta, explicacao)
+      VALUES (
+        'O que o Teorema CAP afirma sobre sistemas distribuídos?',
+        1,
+        'O Teorema CAP afirma que um sistema distribuído só pode garantir duas de Consistência, Disponibilidade e Tolerância a Partições simultaneamente.'
+      )
+      RETURNING id
+    )
+    INSERT INTO alternativas (quiz_id, alternativa)
+    SELECT q.id, a.alt
+    FROM q
+    CROSS JOIN (VALUES
+      ('Que um sistema sempre pode garantir Consistência, Disponibilidade e Tolerância a Partições'),
+      ('Que é impossível garantir mais de duas das três: Consistência, Disponibilidade e Tolerância a Partições'),
+      ('Que a latência da rede é o fator mais importante em um sistema'),
+      ('Que todos os dados devem ser criptografados')
+    ) AS a(alt);
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgres-quiz-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres-quiz
+  template:
+    metadata:
+      labels:
+        app: postgres-quiz
+    spec:
+      securityContext:
+        fsGroup: 999
+      initContainers:
+      - name: postgres-init
+        image: busybox:1.36
+        command: ['sh', '-c', 'chmod 700 /var/lib/postgresql/data && chown -R 999:999 /var/lib/postgresql/data']
+        volumeMounts:
+        - name: postgres-quiz-storage
+          mountPath: /var/lib/postgresql/data
+      containers:
+      - name: postgres
+        image: postgres:15
+        ports:
+        - containerPort: 5433
+        args: ["-c","listen_addresses=*","-c","port=5433"]
+        env:
+        - name: POSTGRES_USER
+          value: "meuusuario"
+        - name: POSTGRES_PASSWORD
+          value: "minhasenha"
+        - name: POSTGRES_DB
+          value: "meubanco"
+        - name: PGPORT
+          value: "5433"
+        - name: PGDATA
+          value: "/var/lib/postgresql/data/pgdata"
+        securityContext:
+          runAsUser: 999
+          runAsNonRoot: true
+        volumeMounts:
+        - name: postgres-quiz-storage
+          mountPath: /var/lib/postgresql/data
+        - name: init-sql
+          mountPath: /docker-entrypoint-initdb.d
+          readOnly: true
+      volumes:
+      - name: postgres-quiz-storage
+        emptyDir: {}
+      - name: init-sql
+        configMap:
+          name: quiz-sql-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres-quiz-service
+spec:
+  type: NodePort
+  selector:
+    app: postgres-quiz
+  ports:
+  - protocol: TCP
+    port: 5433
+    targetPort: 5433
+    nodePort: 30555
+
+# ======================= USER DB ==========================
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: user-sql-config
+data:
+  01_user.sql: |
+    CREATE TABLE IF NOT EXISTS usuario (
+      nome VARCHAR(255),
+      login VARCHAR(255) PRIMARY KEY,
+      rememberToken VARCHAR(255),
+      senha VARCHAR(255),
+      score INTEGER
+    );
+
+    INSERT INTO usuario (nome, login, rememberToken, senha, score) VALUES
+      ('Alice Oliveira', 'alice', '', 'senha123', 0),
+      ('Bruno Costa', 'bruno', '', 'senha456', 0),
+      ('Carla Martins', 'carla', '', 'senha789', 0),
+      ('Diego Souza', 'diego', '', 'senhaABC', 0),
+      ('Elisa Ferreira', 'elisa', '', 'senhaDEF', 0)
+    ON CONFLICT (login) DO NOTHING;
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgres-user-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres-user
+  template:
+    metadata:
+      labels:
+        app: postgres-user
+    spec:
+      securityContext:
+        fsGroup: 999
+      initContainers:
+      - name: postgres-init
+        image: busybox:1.36
+        command: ['sh', '-c', 'chmod 700 /var/lib/postgresql/data && chown -R 999:999 /var/lib/postgresql/data']
+        volumeMounts:
+        - name: postgres-user-storage
+          mountPath: /var/lib/postgresql/data
+      containers:
+      - name: postgres
+        image: postgres:15
+        ports:
+        - containerPort: 5434
+        args: ["-c","listen_addresses=*","-c","port=5434"]
+        env:
+        - name: POSTGRES_USER
+          value: "postgres"
+        - name: POSTGRES_PASSWORD
+          value: "password"
+        - name: POSTGRES_DB
+          value: "serverB"
+        - name: PGPORT
+          value: "5434"
+        - name: PGDATA
+          value: "/var/lib/postgresql/data/pgdata"
+        securityContext:
+          runAsUser: 999
+          runAsNonRoot: true
+        volumeMounts:
+        - name: postgres-user-storage
+          mountPath: /var/lib/postgresql/data
+        - name: init-sql
+          mountPath: /docker-entrypoint-initdb.d
+          readOnly: true
+      volumes:
+      - name: postgres-user-storage
+        emptyDir: {}
+      - name: init-sql
+        configMap:
+          name: user-sql-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres-user-service
+spec:
+  type: NodePort
+  selector:
+    app: postgres-user
+  ports:
+  - protocol: TCP
+    port: 5434
+    targetPort: 5434
+    nodePort: 30434
