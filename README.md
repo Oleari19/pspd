@@ -67,10 +67,12 @@ kubectl get service
 Você verá uma saída parecida com esta:
 
 
-NAME          TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)        AGE
-crud-server   ClusterIP   10.108.81.187   <none>        50051/TCP      5m
-kubernetes    ClusterIP   10.96.0.1       <none>        443/TCP        10m
+```
+NAME          TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)          AGE
+crud-server   ClusterIP   10.108.81.187   <none>        50051/TCP        5m
+kubernetes    ClusterIP   10.96.0.1       <none>        443/TCP          10m
 web-server    NodePort    10.103.17.6     <none>        3000:31567/TCP   5m
+```
 
 
 Procure pelo serviço web-server e anote a porta que aparece após os dois pontos (neste exemplo, 31567).
