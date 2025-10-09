@@ -1,8 +1,10 @@
-Aplicação desenvolvida para a disciplina de Programação de Sistemas Paralelos e Distribuídos, simulando um site de quiz com uma arquitetura de microserviços.
+Aplicação desenvolvida para a disciplina de Programação para Sistemas Paralelos e Distribuídos, simulando um site de quiz com uma arquitetura de microserviços.
+
+Esta versão da aplicação utiliza gRPC. 
 
 ## Descrição
 
-Este projeto consiste em uma aplicação web de quiz onde os usuários podem responder a perguntas. A arquitetura foi projetada para demonstrar conceitos de sistemas distribuídos, utilizando:
+Este projeto consiste em uma aplicação web de **quiz** no qual os usuários podem responder a perguntas. A arquitetura foi projetada para demonstrar conceitos de sistemas distribuídos, utilizando:
 
 Dois servidores em C++: Um microserviço robusto e de alta performance responsável por toda a lógica de negócios e manipulação de dados (Criar, Ler, Atualizar, Deletar perguntas, usuários, pontuações, etc.).
 
@@ -41,15 +43,16 @@ kubectl
 1. Clonar o Repositório
 
 Primeiro, clone este repositório para a sua máquina local.
-Bash
 
+```
     git clone <urlDoProjeto>
     cd pspd-extraclasse1
+```
 
 2. Executar o Script de Deploy
 
 O script deploy.sh automatiza todo o processo de build das imagens Docker e de deploy dos recursos (Deployments, Services) no cluster Minikube.
-Bash
+
 
 ```
 ./deploy.sh
@@ -57,10 +60,10 @@ Bash
 
 3. Obter a Porta de Acesso ao Web Server
 
-Uma vez que os serviços estejam rodando no Kubernetes, precisamos expor o web-server para que possamos acessá-lo pelo frontEnd. O script de deploy criou um serviço do tipo NodePort.
+Uma vez que os serviços estejam rodando no Kubernetes, precisamos expor o web-server para que possamos acessá-lo pelo front-end. O script de deploy criou um serviço do tipo NodePort.
 
 Execute o comando abaixo para listar os serviços e encontrar a porta externa:
-Bash
+
 ```
 kubectl get service
 ```
@@ -89,7 +92,7 @@ minikube ip
 Anote o endereço de IP retornado.
 
 b. Edite o arquivo package.json:
-Abra o arquivo package.json (que deve estar na pasta do cliente Node.js, ex: /web-client/package.json). Encontre o campo "proxy" e atualize-o com o IP do Minikube e a porta externa que você obteve no passo anterior.
+Abra o arquivo package.json (que deve estar na pasta do cliente Node.js, ex: /front/package.json). Encontre o campo "proxy" e atualize-o com o IP do Minikube e a porta externa que você obteve no passo anterior.
 
 Exemplo:
 
@@ -101,8 +104,30 @@ JSON
 5. Acesse a Aplicação
 
 Agora, você precisa instalar as dependências do Node.js e iniciar o servidor de desenvolvimento.
-```Bash
+```
 npm install
 npm start
 ```
-Abra seu navegador e acesse http://localhost:3000  para ver a aplicação funcionando!
+Abra seu navegador e acesse http://localhost:3000 para ver a aplicação funcionando!
+
+## Equipe
+
+Os nomes dos integrantes da equipe podem ser encontrados na tabela 1.
+
+<div align="center">
+<font size="3"><p style="text-align: center"><b>Tabela 1:</b> Integrantes da equipe</p></font>
+
+<table>
+  <tr>
+    <td align="center"><a href="http://github.com/julia-fortunato"><img style="border-radius: 50%;" src="http://github.com/julia-fortunato.png" width="100px;" alt=""/><br /><sub><b>Júlia Fortunato</b></sub></a><br/><a href="Link git" title="Rocketseat"></a></td>
+    <td align="center"><a href="http://github.com/Oleari19"><img style="border-radius: 50%;" src="http://github.com/Oleari19.png" width="100px;" alt=""/><br><sub><b>Maria Clara Oleari</b></sub></a><br/>
+    <td align="center"><a href="https://github.com/MarcoTulioSoares"><img style="border-radius: 50%;" src="http://github.com/MarcoTulioSoares.png" width="100px;" alt=""/><br /><sub><b>Marco Tulio Soares</b></sub></a><br/><a href="Link git" title="Rocketseat"></a></td>
+    <td align="center"><a href="https://github.com/mauricio-araujoo"><img style="border-radius: 50%;" src="https://github.com/mauricio-araujoo.png" width="100px;" alt=""/><br/><sub><b>Maurício Ferreira</b></sub></a><br/>
+
+  </tr>
+</table>
+
+<font size="3"><p style="text-align: center"><b>Autor:</b> <a href="https://github.com/julia-fortunato">Júlia Fortunato</a>, 2025</p></font>
+
+</div>
+
