@@ -70,7 +70,20 @@ export LOGIN_SENHAREQ=123456
 ```
 
 ### `POST /api/pergunta`
-Cria uma pergunta simples (ex.: id=0 com 4 alternativas) para teste de latência.
+Cria uma pergunta simples alinhada ao `PerguntaDTO` do Spring Boot:
+
+Exemplo de payload enviado pelo bench:
+```
+{
+  "pergunta": "pergunta bench",
+  "q1": "a",
+  "q2": "b",
+  "q3": "c",
+  "q4": "d",
+  "explicacao": "bench",
+  "indiceResposta": 0
+}
+```
 
 ### Autenticação (opcional)
 Se o gateway exigir token Bearer:

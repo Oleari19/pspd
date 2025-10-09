@@ -108,17 +108,26 @@ def main():
         return {"email": f"{BENCH_LOGIN}{i}@pspd.local", "senha": BENCH_SENHA}
 
     def body_pergunta(i: int):
+        # Alinha com PerguntaDTO do Spring Boot
         return {
-            "texto": f"pergunta bench {i}",
-            "alternativas": ["a","b","c","d"],
-            "indice_resposta": 0,
-            "explicacao": "bench"
+            "pergunta": f"pergunta bench {i}",
+            "q1": "a",
+            "q2": "b",
+            "q3": "c",
+            "q4": "d",
+            "explicacao": "bench",
+            "indiceResposta": 0
         }
+
+    # Login (opcional): usa variáveis de ambiente LOGIN_LOGINREQ/LOGIN_SENHAREQ
+    LOGIN_LOGINREQ = os.getenv("LOGIN_LOGINREQ", f"{BENCH_LOGIN}0@pspd.local")
+    LOGIN_SENHAREQ = os.getenv("LOGIN_SENHAREQ", BENCH_SENHA)
 
     endpoints = [
         ("GET",  "/api/quiz/summary", None,       "GET_api_quiz_summary_runs.xlsx"),
         ("GET",  "/api/usuario",      None,       "GET_api_usuario_runs.xlsx"),
         ("POST", "/api/usuario",      body_user,  "POST_api_usuario_runs.xlsx"),
+        ("POST", "/api/usuario/login", lambda _i: {"email": LOGIN_LOGINREQ, "senha": LOGIN_SENHAREQ}, "POST_api_usuario_login_runs.xlsx"),
         ("GET",  "/api/pergunta",     None,       "GET_api_pergunta_runs.xlsx"),
         ("POST", "/api/pergunta",     body_pergunta, "POST_api_pergunta_runs.xlsx"),
     ]
