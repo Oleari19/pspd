@@ -76,3 +76,23 @@ Solução Rápida de Problemas
 - Front não acessa API: confirme que a API está em http://localhost:8089 e que `REST_API_BASE` dos arquivos do front aponta para `http://localhost:8089/api`.
 - Build do back falha: confirme Java 17 e Maven 3.9+ (apenas no modo sem Docker).
 
+## Equipe
+
+Os nomes dos integrantes da equipe podem ser encontrados na tabela 1.
+
+<div align="center">
+<font size="3"><p style="text-align: center"><b>Tabela 1:</b> Integrantes da equipe</p></font>
+
+<table>
+  <tr>
+    <td align="center"><a href="http://github.com/julia-fortunato"><img style="border-radius: 50%;" src="http://github.com/julia-fortunato.png" width="100px;" alt=""/><br /><sub><b>Júlia Fortunato</b></sub></a><br/><a href="Link git" title="Rocketseat"></a></td>
+    <td align="center"><a href="http://github.com/Oleari19"><img style="border-radius: 50%;" src="http://github.com/Oleari19.png" width="100px;" alt=""/><br><sub><b>Maria Clara Oleari</b></sub></a><br/>
+    <td align="center"><a href="https://github.com/MarcoTulioSoares"><img style="border-radius: 50%;" src="http://github.com/MarcoTulioSoares.png" width="100px;" alt=""/><br /><sub><b>Marco Tulio Soares</b></sub></a><br/><a href="Link git" title="Rocketseat"></a></td>
+    <td align="center"><a href="https://github.com/mauricio-araujoo"><img style="border-radius: 50%;" src="https://github.com/mauricio-araujoo.png" width="100px;" alt=""/><br/><sub><b>Maurício Ferreira</b></sub></a><br/>
+
+  </tr>
+</table>
+
+<font size="3"><p style="text-align: center"><b>Autor:</b> <a href="https://github.com/julia-fortunato">Júlia Fortunato</a>, 2025</p></font>
+
+</div>
