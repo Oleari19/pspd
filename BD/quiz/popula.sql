@@ -11,12 +11,12 @@ BEGIN
     -- ==================================================
     
     INSERT INTO quiz (texto, indiceResposta, explicacao)
-    VALUES ('Qual é o objetivo principal de um cluster de computadores?', 0, 'Clusters combinam múltiplos computadores (nós) para trabalhar em conjunto, melhorando o desempenho e/ou a disponibilidade.')
+    VALUES ('Qual é o objetivo principal de um cluster de computadores?', 1, 'Clusters combinam múltiplos computadores (nós) para trabalhar em conjunto, melhorando o desempenho e/ou a disponibilidade.')
     RETURNING id INTO q1_id;
 
     INSERT INTO alternativas (quiz_id, alternativa) VALUES
-    (q1_id, 'Aumentar o desempenho ou a disponibilidade'),
     (q1_id, 'Reduzir o consumo de energia de um único servidor'),
+    (q1_id, 'Aumentar o desempenho ou a disponibilidade'),
     (q1_id, 'Facilitar o desenvolvimento de software desktop'),
     (q1_id, 'Melhorar a segurança de redes Wi-Fi');
 
