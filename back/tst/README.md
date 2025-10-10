@@ -13,17 +13,14 @@ pip install requests pandas openpyxl
 
 ### 2) Executar apontando para o **webserver** (gateway REST)
 ```bash
-python perf_bench_rest.py
+python python3 perf_bench_rest.py --base http://localhost:8080
 ```
 
-Sem argumentos o script tenta resolver a URL base nesta ordem:
-1. Variavel `BASE_URL`
-2. Variavel `MINIKUBE_SERVICE_URL`
-3. Saida de `minikube service <service> --url` (servico padrao `gateway-p-rest-service`)
-4. Combinacao das variaveis `MINIKUBE_IP` e `MINIKUBE_PORT`
-5. Fallback `http://localhost:8080`
+> Dica: se usa Minikube, você pode descobrir a URL com:
+```bash
+minikube service gateway-p-rest-service --url
+```
 
-> Para forcar outro destino, defina uma das variaveis acima ou passe `--base <url>`.
 ## Flags úteis
 
 | Flag       | Descrição                                       | Exemplo                 |
