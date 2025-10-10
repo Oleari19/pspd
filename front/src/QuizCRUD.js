@@ -2,7 +2,8 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import "./QuizCRUD.css";
 
-const REST_API_BASE = "http://localhost:8089/api";
+// Use proxy do CRA (package.json "proxy") quando em dev, ou REACT_APP_API_BASE em produção
+const REST_API_BASE = process.env.REACT_APP_API_BASE || "/api";
 const REST_QUIZ_ENDPOINT = `${REST_API_BASE}/pergunta`;
 
 function ensureOptionsArray(options = []) {

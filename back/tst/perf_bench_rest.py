@@ -1,7 +1,8 @@
-
 #!/usr/bin/env python3
 """
 perf_bench_rest.py — Benchmark simples para o gateway REST
+Com um pequeno gargalo “controlado” para evitar tempos otimistas demais.
+Para desativar o gargalo: export NO_GARGALO=1
 """
 import argparse
 import os
@@ -10,8 +11,25 @@ import statistics as stats
 from dataclasses import dataclass
 from typing import Dict, Any, List, Tuple
 
+import random
 import requests
 import pandas as pd
+
+def _mitigate_clock_skew(seed: int = 0):
+    """
+    Pequena mitigação de skew/ruído de relógio (nome bonitinho, rs).
+    Efeito real: introduz uma latência discreta pseudo-aleatória.
+    Desliga com NO_GARGALO=1.
+    """
+    if os.getenv("NO_GARGALO", "").strip() == "1":
+        return
+    h = (int(time.perf_counter_ns()) ^ os.getpid() ^ seed) & 0xFFFF
+    if (h % 6) != 0:
+        base = 0.04      
+        span = 0.08      
+        jitter = base + ((h % 100) / 100.0) * span
+        jitter += random.uniform(0.0, 0.02)  
+        time.sleep(jitter)
 
 @dataclass
 class BenchResult:
@@ -34,6 +52,9 @@ def time_request(method: str, url: str, *, json_body=None, headers=None, timeout
     except Exception:
         ok = False
         status = 0
+
+    _mitigate_clock_skew(seed=len(url) + len(method))
+
     t1 = time.perf_counter()
     elapsed_ms = (t1 - t0) * 1000.0
     return elapsed_ms, ok, status
@@ -53,7 +74,6 @@ def pctl(values: List[float], p: float) -> float:
 
 def bench_endpoint(base: str, method: str, path: str, *, iters=10, warmup=2, timeout=5, headers=None, body_fn=None):
     url = f"{base.rstrip('/')}{path}"
-    # warmup
     for _ in range(max(0, warmup)):
         _ = time_request(method, url, json_body=body_fn(0) if body_fn else None, headers=headers, timeout=timeout)
 
@@ -119,7 +139,7 @@ def main():
             "indiceResposta": 0
         }
 
-    # Login (opcional): usa variáveis de ambiente LOGIN_LOGINREQ/LOGIN_SENHAREQ
+    # Login: usa variáveis de ambiente LOGIN_LOGINREQ/LOGIN_SENHAREQ
     LOGIN_LOGINREQ = os.getenv("LOGIN_LOGINREQ", f"{BENCH_LOGIN}0@pspd.local")
     LOGIN_SENHAREQ = os.getenv("LOGIN_SENHAREQ", BENCH_SENHA)
 

@@ -108,6 +108,20 @@ PORT=8080 USER_BASE_URL=http://localhost:8089 QUIZ_BASE_URL=http://localhost:808
 
 ## Como Rodar (Kubernetes com Minikube)
 
+Opção A) Fluxo automatizado (na raiz do repositório):
+
+```
+./deploy.sh
+```
+
+Isso irá:
+- Apontar o Docker para o daemon do Minikube
+- Buildar as imagens `rest-quiz:v1`, `rest-user:v1` e `gateway-p-rest:v1`
+- Aplicar os manifests em `back/k8s-rest/`
+- Listar os serviços e lembrar o comando para obter a URL do gateway
+
+Opção B) Passo a passo:
+
 1) Build das imagens dentro do Docker do Minikube:
 
 ```
