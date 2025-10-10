@@ -1,11 +1,49 @@
-PSPD – Quiz (Monorepo: Back + Front)
+Aplicação desenvolvida para a disciplina de Programação para Sistemas Paralelos e Distribuídos, simulando um site de quiz com uma arquitetura baseada em serviços REST.
 
-Stack: Spring Boot + PostgreSQL + React, com Docker Compose e manifests para Kubernetes.
+Esta versão da aplicação utiliza um backend Spring Boot integrado ao PostgreSQL, exposto por um gateway Node.js/Express e entregue em contêineres Docker com suporte a Kubernetes.
 
-Requisitos
-- Docker + Docker Compose (recomendado para ambiente local)
-- Node.js 18+ (npm)
-- Opcional: Java 17 + Maven 3.9+ (se quiser rodar o back sem Docker)
+Descrição
+Este projeto consiste em uma aplicação web de quiz na qual os usuários podem responder perguntas e acompanhar rankings. A arquitetura foi projetada para demonstrar conceitos de sistemas distribuídos, utilizando:
+
+Serviço REST em Spring Boot (Java): responsável pela lógica de negócios, persistência via JPA e integração com PostgreSQL para CRUD de usuários, perguntas e pontuações.
+
+API Gateway em Node.js (Express): atua como camada BFF, agregando e roteando chamadas REST para os serviços Spring Boot e expondo endpoints simplificados para o frontend.
+
+Frontend em React: interface web que consome o gateway para exibir perguntas, enviar respostas e visualizar rankings.
+
+PostgreSQL: banco relacional que armazena usuários, perguntas e pontuações com scripts de inicialização automáticos.
+
+Docker Compose: orquestração local que sobe banco, serviço Spring Boot, Adminer e gateway REST com um único comando.
+
+Kubernetes (Minikube): ambiente de orquestração para provisionar múltiplos serviços Spring Boot, banco de dados e gateway em cluster local.
+
+Tecnologias Utilizadas
+Comunicação: REST sobre HTTP
+
+Backend: Spring Boot (Java 17) + PostgreSQL
+
+Gateway/BFF: Node.js 18 (Express)
+
+Frontend: React (Create React App)
+
+Orquestração: Docker Compose e Kubernetes (Minikube)
+
+Contêineres: Docker
+
+Pré-requisitos
+Antes de começar, certifique-se de que você tem as seguintes ferramentas instaladas e configuradas em sua máquina:
+
+Git
+
+Docker + Docker Compose
+
+Node.js 18+
+
+Java 17 + Maven 3.9+
+
+Minikube
+
+kubectl
 
 Rodar Rápido (recomendado)
 
