@@ -6,6 +6,7 @@ Para desativar o gargalo: export NO_GARGALO=1
 """
 import argparse
 import os
+import subprocess
 import time
 import statistics as stats
 from dataclasses import dataclass
@@ -108,14 +109,67 @@ def build_auth_headers() -> Dict[str, str]:
         headers["Authorization"] = f"Bearer {token}"
     return headers
 
+def _discover_minikube_service_url() -> str:
+    minikube_cmd = os.getenv("MINIKUBE_CMD", "minikube").strip()
+    service_name = os.getenv("MINIKUBE_SERVICE_NAME", "gateway-p-rest-service").strip()
+    profile = os.getenv("MINIKUBE_PROFILE", "").strip()
+
+    if not minikube_cmd:
+        return ""
+
+    cmd = [minikube_cmd]
+    if profile:
+        cmd.extend(["-p", profile])
+    cmd.extend(["service", service_name, "--url"])
+
+    try:
+        output = subprocess.check_output(cmd, stderr=subprocess.DEVNULL, text=True)
+    except Exception:
+        return ""
+
+    for line in output.splitlines():
+        line = line.strip()
+        if line:
+            return line
+    return ""
+
+def resolve_default_base_url() -> str:
+    explicit = os.getenv("BASE_URL", "").strip()
+    if explicit:
+        return explicit
+
+    service_url = os.getenv("MINIKUBE_SERVICE_URL", "").strip()
+    if service_url:
+        return service_url
+
+    auto_url = _discover_minikube_service_url()
+    if auto_url:
+        return auto_url
+
+    minikube_ip = os.getenv("MINIKUBE_IP", "").strip()
+    minikube_port = os.getenv("MINIKUBE_PORT", "").strip()
+    if minikube_ip and minikube_port:
+        return f"http://{minikube_ip}:{minikube_port}"
+
+    if minikube_ip:
+        return f"http://{minikube_ip}"
+
+    return "http://localhost:8080"
+
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--base", default=os.getenv("BASE_URL", "http://localhost:8080"))
+    ap.add_argument("--base", default=None)
     ap.add_argument("--iters", type=int, default=10)
     ap.add_argument("--warmup", type=int, default=2)
     ap.add_argument("--timeout", type=int, default=5)
     ap.add_argument("--outdir", default="perf_out_rest")
     args = ap.parse_args()
+
+    base_url = args.base.strip() if args.base else resolve_default_base_url()
+    if not base_url:
+        base_url = "http://localhost:8080"
+
+    print("Base URL em uso:", base_url)
 
     ensure_outdir(args.outdir)
     headers = build_auth_headers()
@@ -156,7 +210,7 @@ def main():
 
     for method, path, body_fn, xlsx_name in endpoints:
         rows, times, oks, last_status = bench_endpoint(
-            args.base, method, path, iters=args.iters, warmup=args.warmup,
+            base_url, method, path, iters=args.iters, warmup=args.warmup,
             timeout=args.timeout, headers=headers, body_fn=body_fn
         )
         save_runs_xlsx(args.outdir, xlsx_name, rows)
@@ -175,7 +229,7 @@ def main():
             "last_status": last_status,
             "iters": args.iters,
             "warmup": args.warmup,
-            "base": args.base
+            "base": base_url
         })
 
     df_sum = pd.DataFrame(summaries)
@@ -188,7 +242,7 @@ def main():
         "last_status": 200,
         "iters": args.iters,
         "warmup": args.warmup,
-        "base": args.base
+        "base": base_url
     }
     out_summary = os.path.join(args.outdir, "perf_summary_rest.xlsx")
     df_sum.to_excel(out_summary, index=False)
