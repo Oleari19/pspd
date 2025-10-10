@@ -13,7 +13,7 @@ pip install requests pandas openpyxl
 
 ### 2) Executar apontando para o **webserver** (gateway REST)
 ```bash
-python perf_bench_rest.py --base http://192.168.49.2:31560
+python python3 perf_bench_rest.py --base http://localhost:8080
 ```
 
 > Dica: se usa Minikube, você pode descobrir a URL com:
