@@ -16,9 +16,10 @@ cd back
 docker compose up -d
 ```
 
-Serviços expostos:
-- API: http://localhost:8089
-- Adminer (UI do banco): http://localhost:8080
+Serviços expostos (Docker Compose):
+- Gateway REST (recomendado): http://localhost:8080
+- API direta (Spring Boot): http://localhost:8089
+- Adminer (UI do banco): http://localhost:8081
   - servidor: db | usuário: postgres | senha: postgres | database: dbspringboot
 
 2) Rodar o Front (React)
@@ -49,8 +50,9 @@ mvn spring-boot:run
 ```
 
 URLs úteis
-- API base: http://localhost:8089/api
-- Adminer: http://localhost:8080
+- Gateway REST: http://localhost:8080 (expõe /api/...)
+- API direta: http://localhost:8089/api
+- Adminer: http://localhost:8081
 - Frontend: http://localhost:3000
 
 Estrutura do Repositório
@@ -66,7 +68,12 @@ minikube start
 cd back
 bash scripts/build-images-rest.sh
 kubectl apply -f k8s-rest/
+# Opção 1: obter URL NodePort diretamente
 minikube service gateway-p-rest-service --url
+# Opção 2: usar Ingress (requer addon e hosts)
+minikube addons enable ingress
+MINIKUBE_IP=$(minikube ip)
+echo "$MINIKUBE_IP rest.local" | sudo tee -a /etc/hosts
 ```
 
 Em seguida, aponte o front para o endpoint retornado (se necessário), ou ajuste o `REST_API_BASE` nos arquivos do `front/src`.

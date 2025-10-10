@@ -50,6 +50,23 @@ services:
     environment:
       ADMINER_DEFAULT_SERVER: db
     ports:
+      - "8081:8080"
+    restart: unless-stopped
+
+  gateway:
+    image: gateway-p-rest:v1
+    build:
+      context: ./gateway-p-rest
+      dockerfile: Dockerfile
+    depends_on:
+      api:
+        condition: service_started
+    environment:
+      PORT: "8080"
+      USER_BASE_URL: http://api:8089
+      QUIZ_BASE_URL: http://api:8089
+      TZ: UTC
+    ports:
       - "8080:8080"
     restart: unless-stopped
 
