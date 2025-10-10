@@ -108,43 +108,27 @@ PORT=8080 USER_BASE_URL=http://localhost:8089 QUIZ_BASE_URL=http://localhost:808
 
 ## Como Rodar (Kubernetes com Minikube)
 
-Opção A) Fluxo automatizado (na raiz do repositório):
+Opção Rápida) Fluxo simples com script
+
+1) Reinicie o cluster (opcional, zera o estado):
 
 ```
-./deploy.sh
+minikube delete
 ```
 
-Isso irá:
-- Apontar o Docker para o daemon do Minikube
-- Buildar as imagens `rest-quiz:v1`, `rest-user:v1` e `gateway-p-rest:v1`
-- Aplicar os manifests em `back/k8s-rest/`
-- Listar os serviços e lembrar o comando para obter a URL do gateway
-
-Opção B) Passo a passo:
-
-1) Build das imagens dentro do Docker do Minikube:
+2) Vá para a pasta `back` e execute o script que constrói as imagens, aplica os manifests e imprime a URL/porta do gateway no final:
 
 ```
 cd back
-bash scripts/build-images-rest.sh
+bash scripts/run-all-rest.sh
 ```
 
-Isso cria:
-- `rest-quiz:v1` (imagem Spring Boot)
-- `rest-user:v1` (tag da mesma imagem Spring)
-- `gateway-p-rest:v1` (Node/Express)
+- No final, o script mostra o `NodePort` do serviço `gateway-p-rest-service` e monta a URL completa com o IP do Minikube (ex.: `http://<minikube-ip>:<nodePort>`).
+- Use essa URL no seu proxy/cliente para acessar o Gateway (ex.: `/healthz`, `/api/quiz/summary`, `/api/usuario`).
 
-2) Aplicar manifests:
 
-```
-bash scripts/k8s-rest.sh
-```
 
-3) Descobrir URL do gateway:
 
-```
-minikube service gateway-p-rest-service --url
-```
 
 4) Testar:
 
