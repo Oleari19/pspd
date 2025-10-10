@@ -110,6 +110,10 @@ npm start
 ```
 Abra seu navegador e acesse http://localhost:3000 para ver a aplicação funcionando!
 
+6. Testes - Benchmarking 
+
+Para execução dos testes feitos para verificação do benchmarking utilizados para a comparação com a versão REST, basta verificar a documentação presente em [Execução - Benchmarking](https://github.com/Oleari19/pspd-extraclasse1/blob/grpc/tst/README_perf_bench.txt).
+
 ## Equipe
 
 Os nomes dos integrantes da equipe podem ser encontrados na tabela 1.
