@@ -61,20 +61,26 @@ Estrutura do Repositório
 - back/k8s-rest – Manifests para Kubernetes (opcional)
 - front – Aplicação React
 
-Kubernetes (opcional, bem resumido)
+## Kubernetes 
 
-```bash
-minikube start
-cd back
-bash scripts/build-images-rest.sh
-kubectl apply -f k8s-rest/
-# Opção 1: obter URL NodePort diretamente
-minikube service gateway-p-rest-service --url
-# Opção 2: usar Ingress (requer addon e hosts)
-minikube addons enable ingress
-MINIKUBE_IP=$(minikube ip)
-echo "$MINIKUBE_IP rest.local" | sudo tee -a /etc/hosts
+1) Reinicie o cluster (opcional, zera o estado):
+
 ```
+minikube delete
+```
+
+2) Vá para a pasta `back` e execute o script que constrói as imagens, aplica os manifests e imprime a URL/porta do gateway no final:
+
+```
+cd back
+bash scripts/run-all-rest.sh
+```
+
+- No final, o script mostra o `NodePort` do serviço `gateway-p-rest-service` e monta a URL completa com o IP do Minikube (ex.: `http://<minikube-ip>:<nodePort>`).
+- Use essa URL no seu proxy/cliente para acessar o Gateway (ex.: `/healthz`, `/api/quiz/summary`, `/api/usuario`).
+
+
+
 
 Em seguida, aponte o front para o endpoint retornado (se necessário), ou ajuste o `REST_API_BASE` nos arquivos do `front/src`.
 
